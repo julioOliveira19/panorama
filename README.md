@@ -1,6 +1,6 @@
 # Panorama
 
-Comparador histórico de países para crescimento real anual do PIB e dívida pública bruta como porcentagem do PIB. A aplicação usa dados do Fundo Monetário Internacional, mantém lacunas como ausências e distingue projeções recentes.
+Comparador histórico de países para crescimento real anual do PIB e dívida pública bruta como porcentagem do PIB. Os indicadores podem ser vistos separadamente ou juntos, com escalas independentes. A aplicação usa dados do Fundo Monetário Internacional, mantém lacunas como ausências e distingue projeções recentes.
 
 ## Executar no Windows
 
@@ -11,8 +11,8 @@ Set-Location E:\panorama
 New-Item -ItemType Directory -Force .tmp | Out-Null
 $env:TEMP = 'E:\panorama\.tmp'
 $env:TMP = 'E:\panorama\.tmp'
-npm install
-npm run dev
+npm.cmd install
+npm.cmd run dev
 ```
 
 O arquivo `.npmrc` mantém o cache do npm em `E:\panorama\.npm-cache`. Os comandos acima também mantêm os temporários da sessão no SSD.
@@ -22,14 +22,14 @@ Abra o endereço exibido pelo Vite, normalmente `http://localhost:5173`.
 Para testar a versão final de produção:
 
 ```powershell
-npm run build
-npm run preview
+npm.cmd run build
+npm.cmd run preview
 ```
 
 ## Atualizar os dados
 
 ```powershell
-npm run data:update
+npm.cmd run data:update
 ```
 
 O importador consulta quatro séries oficiais do DataMapper:
@@ -44,7 +44,7 @@ Os arquivos originais ficam em `data/raw`. Os arquivos consumidos pelo site fica
 ## Verificações
 
 ```powershell
-npm run check
+npm.cmd run check
 ```
 
 Esse comando executa lint, testes automatizados e o build de produção.

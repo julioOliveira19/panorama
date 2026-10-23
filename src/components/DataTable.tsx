@@ -1,23 +1,31 @@
 import { yearsInRange } from '../lib/calculations'
 import { formatValue, statusLabel } from '../lib/format'
-import type { Country, DataPoint } from '../types'
+import type { ComparisonMode, Country, IndicatorKey, PanoramaData } from '../types'
 import { countryColors } from '../types'
 
 type DataTableProps = {
   countries: Country[]
-  series: Record<string, DataPoint[]>
+  mode: ComparisonMode
+  series: PanoramaData['series']
   startYear: number
   endYear: number
 }
 
-export function DataTable({ countries, series, startYear, endYear }: DataTableProps) {
+const indicatorShortLabel: Record<IndicatorKey, string> = {
+  growth: 'PIB (%)',
+  debt: 'Dívida (% PIB)',
+}
+
+export function DataTable({ countries, mode, series, startYear, endYear }: DataTableProps) {
   const years = yearsInRange(startYear, endYear)
-  const lookups = new Map(
-    countries.map((country) => [
+  const indicators: IndicatorKey[] = mode === 'both' ? ['growth', 'debt'] : [mode]
+  const lookups = new Map(indicators.map((indicator) => [
+    indicator,
+    new Map(countries.map((country) => [
       country.code,
-      new Map((series[country.code] ?? []).map((point) => [point.year, point])),
-    ]),
-  )
+      new Map((series[indicator][country.code] ?? []).map((point) => [point.year, point])),
+    ])),
+  ]))
 
   return (
     <section className="panel table-panel" aria-labelledby="table-title">
@@ -33,22 +41,22 @@ export function DataTable({ countries, series, startYear, endYear }: DataTablePr
           <thead>
             <tr>
               <th>Ano</th>
-              {countries.map((country, index) => (
-                <th key={country.code}>
+              {countries.flatMap((country, index) => indicators.map((indicator) => (
+                <th key={`${country.code}-${indicator}`}>
                   <span className="table-country-dot" style={{ background: countryColors[index] }} />
-                  {country.name}
+                  {country.name}{mode === 'both' ? ` · ${indicatorShortLabel[indicator]}` : ''}
                 </th>
-              ))}
+              )))}
             </tr>
           </thead>
           <tbody>
             {years.map((year) => (
               <tr key={year}>
                 <th scope="row">{year}</th>
-                {countries.map((country) => {
-                  const point = lookups.get(country.code)?.get(year)
+                {countries.flatMap((country) => indicators.map((indicator) => {
+                  const point = lookups.get(indicator)?.get(country.code)?.get(year)
                   return (
-                    <td key={country.code} className={!point ? 'is-missing' : ''}>
+                    <td key={`${country.code}-${indicator}`} className={!point ? 'is-missing' : ''}>
                       <strong>{formatValue(point?.value)}</strong>
                       {point && (
                         <small className={`status-${point.status}`}>
@@ -57,7 +65,7 @@ export function DataTable({ countries, series, startYear, endYear }: DataTablePr
                       )}
                     </td>
                   )
-                })}
+                }))}
               </tr>
             ))}
           </tbody>

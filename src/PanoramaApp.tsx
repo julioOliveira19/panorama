@@ -8,7 +8,7 @@ import { WorldMap } from './components/WorldMap'
 import { loadPanorama } from './lib/data'
 import { buildCsv, downloadCsv } from './lib/exportCsv'
 import { formatDate } from './lib/format'
-import type { IndicatorKey, PanoramaData, WorldMapData } from './types'
+import type { ComparisonMode, PanoramaData, WorldMapData } from './types'
 
 type LoadedState = { data: PanoramaData; map: WorldMapData }
 const initialCountries = ['BRA', 'PER']
@@ -16,7 +16,7 @@ const initialCountries = ['BRA', 'PER']
 function PanoramaApp() {
   const [loaded, setLoaded] = useState<LoadedState | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [indicator, setIndicator] = useState<IndicatorKey>('growth')
+  const [mode, setMode] = useState<ComparisonMode>('growth')
   const [selectedCodes, setSelectedCodes] = useState(initialCountries)
   const [startYear, setStartYear] = useState(2000)
   const [endYear, setEndYear] = useState(2014)
@@ -58,7 +58,6 @@ function PanoramaApp() {
   }
 
   const { data, map } = loaded
-  const series = data.series[indicator]
   const availableCodes = new Set(
     data.countries
       .filter((country) => country.availability.growth || country.availability.debt)
@@ -84,8 +83,8 @@ function PanoramaApp() {
 
   const toggleCountry = (code: string) => changeSelection(code, true)
   const exportSelection = () => {
-    const csv = buildCsv(indicator, selectedCountries, series, startYear, endYear)
-    downloadCsv(csv, `panorama-${indicator}-${startYear}-${endYear}.csv`)
+    const csv = buildCsv(mode, selectedCountries, data.series, startYear, endYear)
+    downloadCsv(csv, `panorama-${mode}-${startYear}-${endYear}.csv`)
   }
 
   return (
@@ -124,11 +123,14 @@ function PanoramaApp() {
           <div className="control-group indicator-control">
             <span className="control-label">Indicador</span>
             <div className="segmented-control">
-              <button type="button" aria-pressed={indicator === 'growth'} onClick={() => setIndicator('growth')}>
+              <button type="button" aria-pressed={mode === 'growth'} onClick={() => setMode('growth')}>
                 Crescimento do PIB
               </button>
-              <button type="button" aria-pressed={indicator === 'debt'} onClick={() => setIndicator('debt')}>
+              <button type="button" aria-pressed={mode === 'debt'} onClick={() => setMode('debt')}>
                 Dívida pública
+              </button>
+              <button type="button" aria-pressed={mode === 'both'} onClick={() => setMode('both')}>
+                Ambos
               </button>
             </div>
           </div>
@@ -159,14 +161,14 @@ function PanoramaApp() {
 
         <div className="visual-grid">
           <WorldMap map={map} availableCodes={availableCodes} selectedCodes={selectedCodes} onSelect={changeSelection} />
-          <TimeSeriesChart countries={selectedCountries} indicator={indicator} series={series} startYear={startYear} endYear={endYear} />
+          <TimeSeriesChart countries={selectedCountries} mode={mode} series={data.series} startYear={startYear} endYear={endYear} />
         </div>
 
         {selectedCountries.length > 0 ? (
           <>
-            <SummaryCards countries={selectedCountries} indicator={indicator} series={series} startYear={startYear} endYear={endYear} />
+            <SummaryCards countries={selectedCountries} mode={mode} series={data.series} startYear={startYear} endYear={endYear} />
             <div id="dados">
-              <DataTable countries={selectedCountries} series={series} startYear={startYear} endYear={endYear} />
+              <DataTable countries={selectedCountries} mode={mode} series={data.series} startYear={startYear} endYear={endYear} />
             </div>
           </>
         ) : (

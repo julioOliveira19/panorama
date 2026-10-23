@@ -1,19 +1,19 @@
 import { debtSummary, growthSummary } from '../lib/calculations'
 import { formatSigned, formatValue } from '../lib/format'
-import type { Country, DataPoint, IndicatorKey } from '../types'
+import type { ComparisonMode, Country, PanoramaData } from '../types'
 import { countryColors } from '../types'
 
 type SummaryCardsProps = {
   countries: Country[]
-  indicator: IndicatorKey
-  series: Record<string, DataPoint[]>
+  mode: ComparisonMode
+  series: PanoramaData['series']
   startYear: number
   endYear: number
 }
 
 export function SummaryCards({
   countries,
-  indicator,
+  mode,
   series,
   startYear,
   endYear,
@@ -29,37 +29,60 @@ export function SummaryCards({
       </div>
       <div className="summary-grid">
         {countries.map((country, index) => {
-          const points = series[country.code] ?? []
-          if (indicator === 'growth') {
-            const summary = growthSummary(points, startYear, endYear)
+          const growth = growthSummary(series.growth[country.code] ?? [], startYear, endYear)
+          const debt = debtSummary(series.debt[country.code] ?? [], startYear, endYear)
+
+          if (mode === 'both') {
+            return (
+              <article className="summary-card summary-card-both" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
+                <h3>{country.name}</h3>
+                <div className="summary-dual">
+                  <div>
+                    <span>Crescimento médio</span>
+                    <strong>{formatValue(growth.average)}%</strong>
+                    <small>Acumulado: {formatSigned(growth.cumulative)}%</small>
+                  </div>
+                  <div>
+                    <span>Dívida no período</span>
+                    <strong>{formatSigned(debt.change)} p.p.</strong>
+                    <small>{formatValue(debt.initial)}% → {formatValue(debt.final)}% do PIB</small>
+                  </div>
+                </div>
+                <p className="summary-coverage">
+                  Anos válidos: PIB {growth.validYears} · Dívida {debt.validYears}
+                </p>
+              </article>
+            )
+          }
+
+          if (mode === 'growth') {
             return (
               <article className="summary-card" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
                 <h3>{country.name}</h3>
                 <div className="summary-primary">
-                  <strong>{formatValue(summary.average)}%</strong>
+                  <strong>{formatValue(growth.average)}%</strong>
                   <span>média anual</span>
                 </div>
                 <dl>
-                  <div><dt>Crescimento acumulado</dt><dd>{formatSigned(summary.cumulative)}%</dd></div>
-                  <div><dt>Anos válidos</dt><dd>{summary.validYears}</dd></div>
-                  <div><dt>Anos ausentes</dt><dd>{summary.missingYears}</dd></div>
+                  <div><dt>Crescimento acumulado</dt><dd>{formatSigned(growth.cumulative)}%</dd></div>
+                  <div><dt>Anos válidos</dt><dd>{growth.validYears}</dd></div>
+                  <div><dt>Anos ausentes</dt><dd>{growth.missingYears}</dd></div>
                 </dl>
               </article>
             )
           }
 
-          const summary = debtSummary(points, startYear, endYear)
           return (
             <article className="summary-card" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
               <h3>{country.name}</h3>
               <div className="summary-primary">
-                <strong>{formatSigned(summary.change)} p.p.</strong>
+                <strong>{formatSigned(debt.change)} p.p.</strong>
                 <span>variação no período</span>
               </div>
               <dl>
-                <div><dt>Valor inicial</dt><dd>{formatValue(summary.initial)}%</dd></div>
-                <div><dt>Valor final</dt><dd>{formatValue(summary.final)}%</dd></div>
-                <div><dt>Anos válidos / ausentes</dt><dd>{summary.validYears} / {summary.missingYears}</dd></div>
+                <div><dt>Valor inicial</dt><dd>{formatValue(debt.initial)}%</dd></div>
+                <div><dt>Valor final</dt><dd>{formatValue(debt.final)}%</dd></div>
+                <div><dt>Anos válidos / ausentes</dt><dd>{debt.validYears} / {debt.missingYears}</dd></div>
               </dl>
             </article>
           )

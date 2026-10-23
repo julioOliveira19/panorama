@@ -19,6 +19,7 @@ Recursos:
 - Busca de países para acessibilidade e celular.
 - Período configurável sem apagar a seleção.
 - Gráfico anual, tabela, resumos e exportação CSV.
+- Visualização separada ou simultânea dos dois indicadores, com eixos adequados às unidades.
 - Fonte, edição e estado de observação, estimativa ou projeção.
 - Ausência de dados exibida como ausência, nunca zero.
 

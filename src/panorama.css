@@ -68,8 +68,12 @@
 .map-country.is-available:hover, .map-country.is-available:focus { fill: #91a79e; }
 .map-country.is-selected { stroke: #fff; stroke-width: 1.4; filter: drop-shadow(0 2px 2px rgba(22,43,36,.22)); }
 .chart { width: 100%; height: 425px; }
+.chart-keys { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
 .chart-key { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; white-space: nowrap; }
-.chart-key span { width: 24px; border-top: 2px dashed var(--muted); }
+.chart-key i { display: inline-block; flex: none; }
+.chart-key .key-growth { width: 8px; height: 8px; background: var(--green); border-radius: 50%; }
+.chart-key .key-debt { width: 8px; height: 8px; background: var(--green); transform: rotate(45deg); }
+.chart-key .key-projection { width: 24px; border-top: 2px dashed var(--muted); }
 
 .summary-section { padding: 72px 4px 52px; }
 .section-heading { margin-bottom: 24px; }
@@ -83,6 +87,12 @@
 .summary-card dl div { display: flex; justify-content: space-between; gap: 16px; padding-top: 8px; border-top: 1px solid #edf0ee; }
 .summary-card dt { color: var(--muted); font-size: 12px; }
 .summary-card dd { margin: 0; font-size: 12px; font-weight: 750; }
+.summary-card-both { min-height: 238px; }
+.summary-dual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 22px 0 18px; }
+.summary-dual > div { min-width: 0; }
+.summary-dual span, .summary-dual small { display: block; color: var(--muted); font-size: 11px; }
+.summary-dual strong { display: block; margin: 6px 0; font-family: Georgia, serif; font-size: 27px; font-weight: 400; letter-spacing: -.035em; }
+.summary-coverage { margin: 0; padding-top: 11px; color: var(--muted); border-top: 1px solid #edf0ee; font-size: 11px; }
 
 .table-panel { margin-bottom: 52px; }
 .table-scroll { max-height: 620px; overflow: auto; border-top: 1px solid var(--line); }
@@ -138,7 +148,7 @@ footer p { margin: 0; }
   .hero-description { margin-top: 24px; font-size: 16px; }
   .control-deck { position: static; display: grid; width: 100%; min-width: 0; gap: 18px; padding: 16px; }
   .control-group, .segmented-control, .period-inputs { width: 100%; min-width: 0; }
-  .segmented-control { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .segmented-control { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .segmented-control button { min-width: 0; padding-inline: 7px; font-size: 12px; white-space: normal; }
   .period-inputs { justify-content: space-between; }
   .period-inputs label { flex: 1 1 0; min-width: 0; }
@@ -149,6 +159,8 @@ footer p { margin: 0; }
   .panel-heading, .section-heading { display: grid; }
   .panel-help, .section-heading > p { text-align: left; }
   .chart { height: 370px; }
+  .chart-keys { justify-content: flex-start; }
+  .summary-dual { grid-template-columns: 1fr; }
   .summary-section { padding-top: 52px; }
   .methodology { grid-template-columns: 1fr; gap: 28px; padding: 28px; }
   .methodology-copy li { display: grid; }
