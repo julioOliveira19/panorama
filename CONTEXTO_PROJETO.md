@@ -13,7 +13,7 @@ Indicadores:
 
 Recursos:
 
-- Mapa-múndi interativo.
+- Mapa-múndi interativo com zoom e arraste.
 - Seleção de até cinco países.
 - Clique simples para selecionar; Ctrl+clique para adicionar ou remover.
 - Busca de países para acessibilidade e celular.

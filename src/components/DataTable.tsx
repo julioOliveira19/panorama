@@ -1,7 +1,7 @@
 import { yearsInRange } from '../lib/calculations'
 import { formatValue, statusLabel } from '../lib/format'
 import type { ComparisonMode, Country, IndicatorKey, PanoramaData } from '../types'
-import { countryColors } from '../types'
+import { countryColors, debtColors } from '../types'
 
 type DataTableProps = {
   countries: Country[]
@@ -43,7 +43,10 @@ export function DataTable({ countries, mode, series, startYear, endYear }: DataT
               <th>Ano</th>
               {countries.flatMap((country, index) => indicators.map((indicator) => (
                 <th key={`${country.code}-${indicator}`}>
-                  <span className="table-country-dot" style={{ background: countryColors[index] }} />
+                  <span
+                    className="table-country-dot"
+                    style={{ background: mode === 'both' && indicator === 'debt' ? debtColors[index] : countryColors[index] }}
+                  />
                   {country.name}{mode === 'both' ? ` · ${indicatorShortLabel[indicator]}` : ''}
                 </th>
               )))}

@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { formatValue, statusLabel } from '../lib/format'
 import { yearsInRange } from '../lib/calculations'
 import type { ComparisonMode, Country, IndicatorKey, PanoramaData } from '../types'
-import { countryColors } from '../types'
+import { countryColors, debtColors } from '../types'
 
 registerECharts([LineChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer])
 
@@ -58,7 +58,9 @@ export function TimeSeriesChart({
         const pointByYear = new Map(
           (series[indicator][country.code] ?? []).map((point) => [point.year, point]),
         )
-        const color = countryColors[countryIndex]
+        const color = mode === 'both' && indicator === 'debt'
+          ? debtColors[countryIndex]
+          : countryColors[countryIndex]
         const unit = indicator === 'growth' ? '%' : '% do PIB'
         const observed: ChartDatum[] = years.map((year) => {
           const point = pointByYear.get(year)

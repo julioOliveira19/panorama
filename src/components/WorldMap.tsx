@@ -1,7 +1,28 @@
 import { geoNaturalEarth1, geoPath } from 'd3-geo'
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
+import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from 'react'
 import type { WorldMapData } from '../types'
 import { countryColors } from '../types'
+
+const MAP_WIDTH = 920
+const MAP_HEIGHT = 460
+const MAX_ZOOM = 6
+
+type MapTransform = {
+  scale: number
+  x: number
+  y: number
+}
+
+function clampTransform(transform: MapTransform): MapTransform {
+  const minX = MAP_WIDTH * (1 - transform.scale)
+  const minY = MAP_HEIGHT * (1 - transform.scale)
+  return {
+    scale: transform.scale,
+    x: Math.min(0, Math.max(minX, transform.x)),
+    y: Math.min(0, Math.max(minY, transform.y)),
+  }
+}
 
 type WorldMapProps = {
   map: WorldMapData
@@ -11,6 +32,16 @@ type WorldMapProps = {
 }
 
 export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: WorldMapProps) {
+  const [transform, setTransform] = useState<MapTransform>({ scale: 1, x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const dragRef = useRef<{
+    pointerId: number
+    clientX: number
+    clientY: number
+    x: number
+    y: number
+  } | null>(null)
+  const suppressClickUntil = useRef(0)
   const paths = useMemo(() => {
     const projection = geoNaturalEarth1().fitExtent([[12, 12], [908, 448]], map)
     const path = geoPath(projection)
@@ -20,6 +51,63 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
     }))
   }, [map])
 
+  const zoomBy = (factor: number, centerX = MAP_WIDTH / 2, centerY = MAP_HEIGHT / 2) => {
+    setTransform((current) => {
+      const scale = Math.min(MAX_ZOOM, Math.max(1, current.scale * factor))
+      const ratio = scale / current.scale
+      return clampTransform({
+        scale,
+        x: centerX - (centerX - current.x) * ratio,
+        y: centerY - (centerY - current.y) * ratio,
+      })
+    })
+  }
+
+  const handleWheel = (event: ReactWheelEvent<SVGSVGElement>) => {
+    event.preventDefault()
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const centerX = (event.clientX - bounds.left) * MAP_WIDTH / bounds.width
+    const centerY = (event.clientY - bounds.top) * MAP_HEIGHT / bounds.height
+    const factor = event.deltaY < 0 ? 1.2 : 1 / 1.2
+    zoomBy(factor, centerX, centerY)
+  }
+
+  const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (event.button !== 0 || transform.scale === 1) return
+    event.currentTarget.setPointerCapture(event.pointerId)
+    dragRef.current = {
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      x: transform.x,
+      y: transform.y,
+    }
+    setIsDragging(true)
+  }
+
+  const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const dx = (event.clientX - drag.clientX) * MAP_WIDTH / bounds.width
+    const dy = (event.clientY - drag.clientY) * MAP_HEIGHT / bounds.height
+    if (Math.abs(dx) + Math.abs(dy) > 3) suppressClickUntil.current = performance.now() + 250
+    setTransform((current) => clampTransform({
+      scale: current.scale,
+      x: drag.x + dx,
+      y: drag.y + dy,
+    }))
+  }
+
+  const finishDrag = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (dragRef.current?.pointerId !== event.pointerId) return
+    dragRef.current = null
+    setIsDragging(false)
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+  }
+
   return (
     <section className="panel map-panel" aria-labelledby="map-title">
       <div className="panel-heading">
@@ -27,13 +115,23 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
           <p className="eyebrow">Seleção geográfica</p>
           <h2 id="map-title">Mapa-múndi</h2>
         </div>
-        <p className="panel-help">Clique para escolher. Ctrl+clique adiciona ou remove.</p>
+        <p className="panel-help">Clique para escolher. Use +/− ou a roda para aproximar; arraste quando ampliado.</p>
       </div>
 
       <div className="map-frame">
-        <svg viewBox="0 0 920 460" role="img" aria-label="Mapa interativo de países">
+        <svg
+          viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+          role="img"
+          aria-label={`Mapa interativo de países, zoom em ${Math.round(transform.scale * 100)}%`}
+          className={`map-viewport ${transform.scale > 1 ? 'is-zoomed' : ''} ${isDragging ? 'is-dragging' : ''}`}
+          onWheel={handleWheel}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={finishDrag}
+          onPointerCancel={finishDrag}
+        >
           <rect width="920" height="460" rx="18" className="map-ocean" />
-          <g>
+          <g transform={`translate(${transform.x} ${transform.y}) scale(${transform.scale})`}>
             {paths.map(({ feature, path }) => {
               const code = feature.properties.code
               const selectedIndex = selectedCodes.indexOf(code)
@@ -50,6 +148,7 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
                   aria-label={`${feature.properties.name}${isSelected ? ', selecionado' : ''}`}
                   aria-disabled={!isAvailable}
                   onClick={(event) => {
+                    if (performance.now() < suppressClickUntil.current) return
                     if (isAvailable) onSelect(code, event.ctrlKey || event.metaKey)
                   }}
                   onKeyDown={(event) => {
@@ -65,6 +164,19 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
             })}
           </g>
         </svg>
+        <div className="map-controls" aria-label="Controles de zoom do mapa">
+          <button type="button" onClick={() => zoomBy(1.5)} disabled={transform.scale >= MAX_ZOOM} aria-label="Aumentar zoom">+</button>
+          <button type="button" onClick={() => zoomBy(1 / 1.5)} disabled={transform.scale <= 1} aria-label="Diminuir zoom">−</button>
+          <button
+            type="button"
+            className="map-reset"
+            onClick={() => setTransform({ scale: 1, x: 0, y: 0 })}
+            disabled={transform.scale === 1}
+            aria-label="Redefinir zoom"
+          >
+            {Math.round(transform.scale * 100)}%
+          </button>
+        </div>
       </div>
     </section>
   )

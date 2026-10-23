@@ -61,3 +61,4 @@ export type MapProperties = {
 export type WorldMapData = GeoJSON.FeatureCollection<GeoJSON.Geometry, MapProperties>
 
 export const countryColors = ['#2463eb', '#d97706', '#0f8a75', '#c24178', '#7557d3']
+export const debtColors = ['#7897e8', '#e5a34a', '#61ad9f', '#d884aa', '#a08bdd']
