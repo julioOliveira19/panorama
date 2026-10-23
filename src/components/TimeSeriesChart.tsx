@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { formatPerCapita, formatValue, statusLabel } from '../lib/format'
 import { yearsInRange } from '../lib/calculations'
 import { translate } from '../lib/i18n'
-import type { ComparisonMode, Country, DataPoint, IndicatorKey, Language, PanoramaData, Theme } from '../types'
+import type { ComparisonMode, Country, IndicatorKey, Language, PanoramaData, Theme } from '../types'
 import { countryColors, debtColors } from '../types'
 
 registerECharts([LineChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer])
@@ -58,41 +58,6 @@ export function TimeSeriesChart({
     () => mode === 'both' ? ['growth', 'debt'] : [mode],
     [mode],
   )
-  const sourceCoverage = useMemo(() => {
-    const coverage = new Map<DataPoint['source'], {
-      source: DataPoint['source']
-      minYear: number
-      maxYear: number
-      hasProjection: boolean
-    }>()
-
-    for (const country of countries) {
-      for (const indicator of activeIndicators) {
-        for (const point of series[indicator][country.code] ?? []) {
-          if (point.year < startYear || point.year > endYear) continue
-          const current = coverage.get(point.source)
-          if (!current) {
-            coverage.set(point.source, {
-              source: point.source,
-              minYear: point.year,
-              maxYear: point.year,
-              hasProjection: point.status === 'projection',
-            })
-            continue
-          }
-          current.minYear = Math.min(current.minYear, point.year)
-          current.maxYear = Math.max(current.maxYear, point.year)
-          current.hasProjection ||= point.status === 'projection'
-        }
-      }
-    }
-
-    const order: DataPoint['source'][] = ['FPP', 'WEO', 'WB']
-    return [...coverage.values()].sort(
-      (left, right) => order.indexOf(left.source) - order.indexOf(right.source),
-    )
-  }, [activeIndicators, countries, endYear, series, startYear])
-
   useEffect(() => {
     if (!chartRef.current) return
     const chart = init(chartRef.current, undefined, { renderer: 'svg' })
@@ -284,11 +249,6 @@ export function TimeSeriesChart({
             ? 'chart.consumptionPerCapitaTitle'
             : 'chart.bothTitle',
   )
-  const sourceName = (source: DataPoint['source']) => translate(
-    language,
-    source === 'FPP' ? 'source.fppShort' : source === 'WEO' ? 'source.weoShort' : 'source.wbShort',
-  )
-
   return (
     <section className="panel chart-panel" aria-labelledby="chart-title">
       <div className="panel-heading">
@@ -307,23 +267,6 @@ export function TimeSeriesChart({
             <span className="chart-key"><i className="key-projection" /> {translate(language, 'chart.projection')}</span>
           )}
         </div>
-      </div>
-      <div className="chart-source-note" role="note">
-        {sourceCoverage.length > 0 ? (
-          <p>
-            <strong>{translate(language, 'chart.sourceIntro')}:</strong>{' '}
-            {sourceCoverage.map(({ source, minYear, maxYear, hasProjection }, index) => (
-              <span className="source-range" key={source}>
-                {index > 0 && <span aria-hidden="true"> · </span>}
-                {sourceName(source)}: {minYear === maxYear ? minYear : `${minYear}–${maxYear}`}
-                {hasProjection ? ` (${translate(language, 'status.projection')})` : ''}
-              </span>
-            ))}
-            <span className="source-detail"> — {translate(language, 'chart.sourceVariation')}</span>
-          </p>
-        ) : (
-          <p><strong>{translate(language, 'chart.sourceIntro')}:</strong> {translate(language, 'chart.sourceNoData')}</p>
-        )}
       </div>
       <div ref={chartRef} className="chart" role="img" aria-label={translate(language, 'chart.aria', { title: title.toLowerCase() })} />
     </section>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './panorama.css'
+import { ChartSourceNote } from './components/ChartSourceNote'
 import { CountrySelector } from './components/CountrySelector'
 import { DataTable } from './components/DataTable'
 import { SummaryCards } from './components/SummaryCards'
@@ -214,6 +215,7 @@ function PanoramaApp() {
         <div className="visual-grid">
           <WorldMap map={map} availableCodes={availableCodes} selectedCodes={selectedCodes} onSelect={changeSelection} language={language} />
           <TimeSeriesChart countries={selectedCountries} mode={mode} series={data.series} startYear={startYear} endYear={endYear} theme={theme} language={language} />
+          <ChartSourceNote countries={selectedCountries} mode={mode} series={data.series} startYear={startYear} endYear={endYear} language={language} />
         </div>
 
         {selectedCountries.length > 0 ? (
