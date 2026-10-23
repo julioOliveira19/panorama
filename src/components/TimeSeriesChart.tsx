@@ -284,12 +284,6 @@ export function TimeSeriesChart({
             ? 'chart.consumptionPerCapitaTitle'
             : 'chart.bothTitle',
   )
-  const sourceDescription = translate(
-    language,
-    mode === 'gdpPerCapita' || mode === 'consumptionPerCapita'
-      ? 'chart.sourceWdiDescription'
-      : 'chart.sourceFppWoeDescription',
-  )
   const sourceName = (source: DataPoint['source']) => translate(
     language,
     source === 'FPP' ? 'source.fppShort' : source === 'WEO' ? 'source.weoShort' : 'source.wbShort',
@@ -315,20 +309,21 @@ export function TimeSeriesChart({
         </div>
       </div>
       <div className="chart-source-note" role="note">
-        <p><strong>{translate(language, 'chart.sourceIntro')}:</strong> {sourceDescription}</p>
         {sourceCoverage.length > 0 ? (
-          <div className="source-ranges">
-            {sourceCoverage.map(({ source, minYear, maxYear, hasProjection }) => (
-              <span key={source}>
-                {sourceName(source)} · {minYear === maxYear ? minYear : `${minYear}–${maxYear}`}
-                {hasProjection ? ` · ${translate(language, 'status.projection')}` : ''}
+          <p>
+            <strong>{translate(language, 'chart.sourceIntro')}:</strong>{' '}
+            {sourceCoverage.map(({ source, minYear, maxYear, hasProjection }, index) => (
+              <span className="source-range" key={source}>
+                {index > 0 && <span aria-hidden="true"> · </span>}
+                {sourceName(source)}: {minYear === maxYear ? minYear : `${minYear}–${maxYear}`}
+                {hasProjection ? ` (${translate(language, 'status.projection')})` : ''}
               </span>
             ))}
-          </div>
+            <span className="source-detail"> — {translate(language, 'chart.sourceVariation')}</span>
+          </p>
         ) : (
-          <span className="source-empty">{translate(language, 'chart.sourceNoData')}</span>
+          <p><strong>{translate(language, 'chart.sourceIntro')}:</strong> {translate(language, 'chart.sourceNoData')}</p>
         )}
-        <small>{translate(language, 'chart.sourceVariation')}</small>
       </div>
       <div ref={chartRef} className="chart" role="img" aria-label={translate(language, 'chart.aria', { title: title.toLowerCase() })} />
     </section>
