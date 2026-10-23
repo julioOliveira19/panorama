@@ -35,6 +35,8 @@ O importador normaliza os dados em registros com país, ano, indicador, valor, u
 
 O World Development Indicators do Banco Mundial fornece `NY.GDP.PCAP.PP.KD` para PIB per capita e `NE.CON.PCAP.PP.KD` para consumo das famílias per capita. As duas séries usam PPC em dólares internacionais constantes de 2021, começam em 1990 para Brasil, Peru e Japão e preservam lacunas sem convertê-las em zero.
 
+Acima do gráfico, a interface exibe uma nota dinâmica com as fontes e os intervalos efetivamente presentes nos países, indicadores e anos selecionados. A fonte e o status exatos de cada ponto continuam disponíveis no tooltip.
+
 ## Regras econômicas
 
 - Crescimento anual não deve ser somado como percentual simples.

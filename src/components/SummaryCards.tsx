@@ -97,8 +97,8 @@ export function SummaryCards({
             <article className="summary-card" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
               <h3>{country.name}</h3>
               <div className="summary-primary">
-                <strong>{formatPerCapita(level.final, language)} int$</strong>
-                <span>{translate(language, 'summary.latestValue')}</span>
+                <strong>{formatPerCapita(level.final, language)}</strong>
+                <span>{translate(language, 'summary.latestValue')} · {translate(language, 'unit.perCapita')}</span>
               </div>
               <dl>
                 <div><dt>{translate(language, 'summary.periodGrowth')}</dt><dd>{formatSigned(level.percentChange, language)}%</dd></div>

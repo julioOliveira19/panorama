@@ -93,6 +93,12 @@
 .chart-key .key-growth { width: 8px; height: 8px; background: #2463eb; border-radius: 50%; }
 .chart-key .key-debt { width: 8px; height: 8px; background: #7897e8; transform: rotate(45deg); }
 .chart-key .key-projection { width: 24px; border-top: 2px dashed var(--muted); }
+.chart-source-note { margin: 0 25px 8px; padding: 12px 14px; color: var(--muted); background: var(--soft); border: 1px solid var(--line); border-radius: 12px; }
+.chart-source-note p { margin: 0; font-size: 12px; line-height: 1.5; }
+.chart-source-note strong { color: var(--ink); }
+.source-ranges { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+.source-ranges span { padding: 5px 8px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 999px; font-size: 11px; font-weight: 700; }
+.chart-source-note small, .source-empty { display: block; margin-top: 8px; font-size: 10px; line-height: 1.4; }
 
 .summary-section { padding: 72px 4px 52px; }
 .section-heading { margin-bottom: 24px; }
@@ -179,6 +185,7 @@ footer p { margin: 0; }
   .country-results { top: auto; right: 0; bottom: -250px; }
   .panel-heading, .section-heading { display: grid; }
   .panel-help, .section-heading > p { text-align: left; }
+  .chart-source-note { margin-inline: 16px; }
   .chart { height: 370px; }
   .map-controls { right: 22px; bottom: 24px; grid-template-columns: 32px 32px auto; }
   .map-controls button { min-width: 32px; height: 30px; }

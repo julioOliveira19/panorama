@@ -46,6 +46,6 @@ describe('buildCsv', () => {
   it('exporta os indicadores per capita com unidade PPC constante', () => {
     const csv = buildCsv('gdpPerCapita', [japan], series, 2000, 2000)
 
-    expect(csv).toContain('JPN,Japão,2000,pib_per_capita_ppc_constante,32000,int$ 2021 por habitante,WB,dado publicado')
+    expect(csv).toContain('JPN,Japão,2000,pib_per_capita_ppc_constante,32000,dólares internacionais de 2021 por habitante,WB,dado publicado')
   })
 })
