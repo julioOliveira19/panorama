@@ -8,9 +8,14 @@ Abra o PowerShell e rode:
 
 ```powershell
 Set-Location E:\panorama
+New-Item -ItemType Directory -Force .tmp | Out-Null
+$env:TEMP = 'E:\panorama\.tmp'
+$env:TMP = 'E:\panorama\.tmp'
 npm install
 npm run dev
 ```
+
+O arquivo `.npmrc` mantém o cache do npm em `E:\panorama\.npm-cache`. Os comandos acima também mantêm os temporários da sessão no SSD.
 
 Abra o endereço exibido pelo Vite, normalmente `http://localhost:5173`.
 
