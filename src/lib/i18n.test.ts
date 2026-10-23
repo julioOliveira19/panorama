@@ -3,9 +3,9 @@ import { localizedCountryName, saveLanguage, translate } from './i18n'
 
 describe('i18n', () => {
   it('traduz a interface nos três idiomas', () => {
-    expect(translate('pt-BR', 'controls.both')).toBe('Ambos')
-    expect(translate('en', 'controls.both')).toBe('Both')
-    expect(translate('es', 'controls.both')).toBe('Ambos')
+    expect(translate('pt-BR', 'controls.both')).toBe('PIB + dívida')
+    expect(translate('en', 'controls.both')).toBe('GDP + debt')
+    expect(translate('es', 'controls.both')).toBe('PIB + deuda')
   })
 
   it('localiza nomes de países', () => {

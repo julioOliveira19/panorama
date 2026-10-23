@@ -8,6 +8,8 @@ const japan: Country = {
   availability: {
     growth: { minYear: 2000, maxYear: 2000, count: 1 },
     debt: { minYear: 2000, maxYear: 2000, count: 1 },
+    gdpPerCapita: { minYear: 2000, maxYear: 2000, count: 1 },
+    consumptionPerCapita: { minYear: 2000, maxYear: 2000, count: 1 },
   },
 }
 
@@ -17,6 +19,12 @@ const series = {
   },
   debt: {
     JPN: [{ year: 2000, value: 135.6, source: 'FPP', status: 'observation' }],
+  },
+  gdpPerCapita: {
+    JPN: [{ year: 2000, value: 32_000, source: 'WB', status: 'published' }],
+  },
+  consumptionPerCapita: {
+    JPN: [{ year: 2000, value: 21_000, source: 'WB', status: 'published' }],
   },
 } satisfies PanoramaData['series']
 
@@ -33,5 +41,11 @@ describe('buildCsv', () => {
 
     expect(csv.split('\n')[0]).toBe('country_code,country,year,indicator,value,unit,source,status')
     expect(csv).toContain('JPN,Japan,2000,real_gdp_growth,2.5,%,FPP,observation')
+  })
+
+  it('exporta os indicadores per capita com unidade PPC constante', () => {
+    const csv = buildCsv('gdpPerCapita', [japan], series, 2000, 2000)
+
+    expect(csv).toContain('JPN,Japão,2000,pib_per_capita_ppc_constante,32000,int$ 2021 por habitante,WB,dado publicado')
   })
 })

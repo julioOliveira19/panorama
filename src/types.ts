@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const indicatorKeySchema = z.enum(['growth', 'debt'])
+export const indicatorKeySchema = z.enum(['growth', 'debt', 'gdpPerCapita', 'consumptionPerCapita'])
 export type IndicatorKey = z.infer<typeof indicatorKeySchema>
 export type ComparisonMode = IndicatorKey | 'both'
 export type Theme = 'light' | 'dark'
@@ -9,8 +9,8 @@ export type Language = 'pt-BR' | 'en' | 'es'
 export const dataPointSchema = z.object({
   year: z.number().int(),
   value: z.number(),
-  source: z.enum(['FPP', 'WEO']),
-  status: z.enum(['observation', 'estimate', 'projection']),
+  source: z.enum(['FPP', 'WEO', 'WB']),
+  status: z.enum(['observation', 'estimate', 'projection', 'published']),
 })
 export type DataPoint = z.infer<typeof dataPointSchema>
 
@@ -27,11 +27,12 @@ export const panoramaDataSchema = z.object({
     indicators: z.record(z.string(), z.object({
       label: z.string(),
       unit: z.string(),
-      fppCode: z.string(),
-      weoCode: z.string(),
+      fppCode: z.string().optional(),
+      weoCode: z.string().optional(),
+      worldBankCode: z.string().optional(),
     })),
     sources: z.array(z.object({
-      id: z.enum(['FPP', 'WEO']),
+      id: z.enum(['FPP', 'WEO', 'WB']),
       label: z.string(),
       url: z.string().url(),
       lastModified: z.string(),
@@ -44,11 +45,15 @@ export const panoramaDataSchema = z.object({
     availability: z.object({
       growth: availabilitySchema,
       debt: availabilitySchema,
+      gdpPerCapita: availabilitySchema,
+      consumptionPerCapita: availabilitySchema,
     }),
   })),
   series: z.object({
     growth: z.record(z.string(), z.array(dataPointSchema)),
     debt: z.record(z.string(), z.array(dataPointSchema)),
+    gdpPerCapita: z.record(z.string(), z.array(dataPointSchema)),
+    consumptionPerCapita: z.record(z.string(), z.array(dataPointSchema)),
   }),
 })
 

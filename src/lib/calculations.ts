@@ -15,6 +15,16 @@ export type DebtSummary = {
   missingYears: number
 }
 
+export type LevelSummary = {
+  initial: number | null
+  final: number | null
+  absoluteChange: number | null
+  percentChange: number | null
+  annualizedChange: number | null
+  validYears: number
+  missingYears: number
+}
+
 export function yearsInRange(startYear: number, endYear: number) {
   return Array.from(
     { length: Math.max(0, endYear - startYear + 1) },
@@ -75,13 +85,55 @@ export function debtSummary(
   }
 }
 
+export function levelSummary(
+  points: DataPoint[],
+  startYear: number,
+  endYear: number,
+): LevelSummary {
+  const selected = pointsInRange(points, startYear, endYear)
+  const totalYears = yearsInRange(startYear, endYear).length
+
+  if (selected.length === 0) {
+    return {
+      initial: null,
+      final: null,
+      absoluteChange: null,
+      percentChange: null,
+      annualizedChange: null,
+      validYears: 0,
+      missingYears: totalYears,
+    }
+  }
+
+  const initialPoint = selected[0]
+  const finalPoint = selected.at(-1) ?? initialPoint
+  const yearSpan = finalPoint.year - initialPoint.year
+  const absoluteChange = finalPoint.value - initialPoint.value
+  const percentChange = initialPoint.value === 0
+    ? null
+    : (absoluteChange / initialPoint.value) * 100
+  const annualizedChange = initialPoint.value > 0 && finalPoint.value > 0 && yearSpan > 0
+    ? (Math.pow(finalPoint.value / initialPoint.value, 1 / yearSpan) - 1) * 100
+    : null
+
+  return {
+    initial: initialPoint.value,
+    final: finalPoint.value,
+    absoluteChange,
+    percentChange,
+    annualizedChange,
+    validYears: selected.length,
+    missingYears: totalYears - selected.length,
+  }
+}
+
 export function summarize(
   indicator: IndicatorKey,
   points: DataPoint[],
   startYear: number,
   endYear: number,
 ) {
-  return indicator === 'growth'
-    ? growthSummary(points, startYear, endYear)
-    : debtSummary(points, startYear, endYear)
+  if (indicator === 'growth') return growthSummary(points, startYear, endYear)
+  if (indicator === 'debt') return debtSummary(points, startYear, endYear)
+  return levelSummary(points, startYear, endYear)
 }

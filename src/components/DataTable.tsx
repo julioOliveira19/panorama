@@ -1,5 +1,5 @@
 import { yearsInRange } from '../lib/calculations'
-import { formatValue, statusLabel } from '../lib/format'
+import { formatPerCapita, formatValue, statusLabel } from '../lib/format'
 import { translate } from '../lib/i18n'
 import type { ComparisonMode, Country, IndicatorKey, Language, PanoramaData } from '../types'
 import { countryColors, debtColors } from '../types'
@@ -57,7 +57,9 @@ export function DataTable({ countries, mode, series, startYear, endYear, languag
                   const point = lookups.get(indicator)?.get(country.code)?.get(year)
                   return (
                     <td key={`${country.code}-${indicator}`} className={!point ? 'is-missing' : ''}>
-                      <strong>{formatValue(point?.value, language)}</strong>
+                      <strong>{indicator === 'gdpPerCapita' || indicator === 'consumptionPerCapita'
+                        ? formatPerCapita(point?.value, language)
+                        : formatValue(point?.value, language)}</strong>
                       {point && (
                         <small className={`status-${point.status}`}>
                           {point.source} · {statusLabel(point.status, language)}

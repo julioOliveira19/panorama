@@ -83,6 +83,8 @@
 .map-country { fill: var(--map-country); stroke: var(--paper); stroke-width: .8; transition: fill .15s, opacity .15s, transform .15s; vector-effect: non-scaling-stroke; }
 .map-country.is-available { fill: var(--map-available); cursor: pointer; }
 .map-country.is-available:hover, .map-country.is-available:focus { fill: var(--map-hover); }
+.map-country:focus { outline: none; }
+.map-country.is-available:focus-visible { fill: var(--map-hover); stroke: var(--accent); stroke-width: 1.8; }
 .map-country.is-selected { stroke: var(--paper); stroke-width: 1.4; filter: drop-shadow(0 2px 2px rgba(5,12,9,.3)); }
 .chart { width: 100%; height: 425px; }
 .chart-keys { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
@@ -166,7 +168,8 @@ footer p { margin: 0; }
   .hero-description { margin-top: 24px; font-size: 16px; }
   .control-deck { position: static; display: grid; width: 100%; min-width: 0; gap: 18px; padding: 16px; }
   .control-group, .segmented-control, .period-inputs { width: 100%; min-width: 0; }
-  .segmented-control { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .segmented-control { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .segmented-control button:last-child { grid-column: 1 / -1; }
   .segmented-control button { min-width: 0; padding-inline: 7px; font-size: 12px; white-space: normal; }
   .period-inputs { justify-content: space-between; }
   .period-inputs label { flex: 1 1 0; min-width: 0; }

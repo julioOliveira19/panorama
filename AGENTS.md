@@ -5,12 +5,12 @@
 - Leia `CONTEXTO_PROJETO.md` antes de alterar a arquitetura ou os dados.
 - Preserve o código existente e converse em português brasileiro.
 - Mantenha a aplicação local e publicável como site estático, sem backend obrigatório.
-- O MVP possui somente crescimento real anual do PIB e dívida pública bruta/PIB.
+- O MVP possui crescimento real anual do PIB, dívida pública bruta/PIB, PIB per capita em PPC constante e consumo das famílias per capita em PPC constante.
 - Não acrescente login, monetização ou temas adicionais sem pedido específico.
 
 ## Dados e precisão
 
-- Use dados oficiais do FMI e teste fontes e códigos antes de alterar a integração.
+- Use dados oficiais do FMI e do Banco Mundial e teste fontes e códigos antes de alterar a integração.
 - FPP é a fonte histórica. WEO complementa os anos recentes quando compatível.
 - Não invente valores nem transforme lacunas em zero.
 - Preserve fonte, unidade, edição e condição de observação, estimativa ou projeção.

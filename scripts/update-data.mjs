@@ -25,6 +25,8 @@ const endpoints = {
   fppDebt: 'https://www.imf.org/external/datamapper/api/v2/d',
   weoGrowth: 'https://www.imf.org/external/datamapper/api/v2/NGDP_RPCH',
   weoDebt: 'https://www.imf.org/external/datamapper/api/v2/GGXWDG_NGDP',
+  worldBankGdpPerCapita: 'https://api.worldbank.org/v2/country/all/indicator/NY.GDP.PCAP.PP.KD?format=json&per_page=20000',
+  worldBankConsumptionPerCapita: 'https://api.worldbank.org/v2/country/all/indicator/NE.CON.PCAP.PP.KD?format=json&per_page=20000',
 }
 
 const indicatorConfiguration = {
@@ -62,7 +64,7 @@ function decodeHtml(value) {
 function parseEdgeDocument(html) {
   const match = html.match(/<pre>([\s\S]*?)<\/pre>/i)
   if (!match) {
-    throw new Error('O Edge não retornou um documento JSON do FMI.')
+    throw new Error('O Edge não retornou um documento JSON da fonte de dados.')
   }
   return JSON.parse(decodeHtml(match[1]))
 }
@@ -160,6 +162,33 @@ function combineSources(fppValues, weoValues, projectionYear) {
   return result
 }
 
+function worldBankSeries(payload, allowedCodes) {
+  if (!Array.isArray(payload) || !Array.isArray(payload[1])) {
+    throw new Error('Resposta inválida da API do Banco Mundial.')
+  }
+
+  const result = {}
+  for (const row of payload[1]) {
+    if (row.value == null) continue
+    const code = row.countryiso3code
+    const year = Number(row.date)
+    const value = Number(row.value)
+    if (!allowedCodes.has(code) || !Number.isFinite(year) || !Number.isFinite(value)) continue
+    result[code] ??= []
+    result[code].push({
+      year,
+      value,
+      source: 'WB',
+      status: 'published',
+    })
+  }
+
+  for (const points of Object.values(result)) {
+    points.sort((a, b) => a.year - b.year)
+  }
+  return result
+}
+
 function availability(points) {
   if (!points?.length) return null
   return {
@@ -209,20 +238,33 @@ async function main() {
   const weoGrowth = getIndicator(payloads.weoGrowth, indicatorConfiguration.growth.weo)
   const weoDebt = getIndicator(payloads.weoDebt, indicatorConfiguration.debt.weo)
 
+  const growth = combineSources(
+    fppGrowth.values,
+    weoGrowth.values,
+    weoGrowth.metadata['projection-year'],
+  )
+  const debt = combineSources(
+    fppDebt.values,
+    weoDebt.values,
+    weoDebt.metadata['projection-year'],
+  )
+  const baseCountryCodes = new Set([...Object.keys(growth), ...Object.keys(debt)])
   const series = {
-    growth: combineSources(
-      fppGrowth.values,
-      weoGrowth.values,
-      weoGrowth.metadata['projection-year'],
-    ),
-    debt: combineSources(
-      fppDebt.values,
-      weoDebt.values,
-      weoDebt.metadata['projection-year'],
+    growth,
+    debt,
+    gdpPerCapita: worldBankSeries(payloads.worldBankGdpPerCapita, baseCountryCodes),
+    consumptionPerCapita: worldBankSeries(
+      payloads.worldBankConsumptionPerCapita,
+      baseCountryCodes,
     ),
   }
 
-  const allCodes = new Set([...Object.keys(series.growth), ...Object.keys(series.debt)])
+  const allCodes = new Set([
+    ...Object.keys(series.growth),
+    ...Object.keys(series.debt),
+    ...Object.keys(series.gdpPerCapita),
+    ...Object.keys(series.consumptionPerCapita),
+  ])
   const countryCatalog = payloads.countries.countries ?? {}
   const countryList = [...allCodes]
     .map((code) => ({
@@ -231,6 +273,8 @@ async function main() {
       availability: {
         growth: availability(series.growth[code]),
         debt: availability(series.debt[code]),
+        gdpPerCapita: availability(series.gdpPerCapita[code]),
+        consumptionPerCapita: availability(series.consumptionPerCapita[code]),
       },
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
@@ -238,7 +282,7 @@ async function main() {
   const output = {
     meta: {
       generatedAt: new Date().toISOString(),
-      methodology: 'FPP histórico; WEO apenas após o último ano FPP disponível por país e indicador.',
+      methodology: 'FPP histórico; WEO apenas após o último ano FPP disponível por país e indicador; WDI para PIB e consumo per capita em PPC constante.',
       indicators: {
         growth: {
           label: 'Crescimento real anual do PIB',
@@ -251,6 +295,16 @@ async function main() {
           unit: '% do PIB',
           fppCode: indicatorConfiguration.debt.fpp,
           weoCode: indicatorConfiguration.debt.weo,
+        },
+        gdpPerCapita: {
+          label: 'PIB per capita em PPC, preços constantes',
+          unit: 'dólares internacionais constantes de 2021 por habitante',
+          worldBankCode: 'NY.GDP.PCAP.PP.KD',
+        },
+        consumptionPerCapita: {
+          label: 'Consumo das famílias per capita em PPC, preços constantes',
+          unit: 'dólares internacionais constantes de 2021 por habitante',
+          worldBankCode: 'NE.CON.PCAP.PP.KD',
         },
       },
       sources: [
@@ -266,6 +320,12 @@ async function main() {
           url: 'https://data.imf.org/Datasets/WEO',
           lastModified: weoGrowth.metadata['last-modified'],
           projectionYear: weoGrowth.metadata['projection-year'],
+        },
+        {
+          id: 'WB',
+          label: 'World Development Indicators — Banco Mundial',
+          url: 'https://data.worldbank.org/',
+          lastModified: payloads.worldBankGdpPerCapita[0]?.lastupdated ?? new Date().toISOString(),
         },
       ],
     },

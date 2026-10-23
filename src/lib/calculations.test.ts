@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { debtSummary, growthSummary } from './calculations'
+import { debtSummary, growthSummary, levelSummary } from './calculations'
 import type { DataPoint } from '../types'
 
 const points: DataPoint[] = [
@@ -24,6 +24,18 @@ describe('debtSummary', () => {
     expect(result.initial).toBe(10)
     expect(result.final).toBe(20)
     expect(result.change).toBe(10)
+    expect(result.missingYears).toBe(1)
+  })
+})
+
+describe('levelSummary', () => {
+  it('calcula valores inicial e final, variação e crescimento anualizado', () => {
+    const result = levelSummary(points, 2000, 2003)
+    expect(result.initial).toBe(10)
+    expect(result.final).toBe(20)
+    expect(result.absoluteChange).toBe(10)
+    expect(result.percentChange).toBe(100)
+    expect(result.annualizedChange).toBeCloseTo(25.9921)
     expect(result.missingYears).toBe(1)
   })
 })

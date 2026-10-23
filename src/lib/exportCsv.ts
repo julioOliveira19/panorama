@@ -8,6 +8,19 @@ function escapeCsv(value: string | number) {
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
+function csvIndicator(language: Language, indicator: IndicatorKey) {
+  if (indicator === 'growth') return translate(language, 'csv.growth')
+  if (indicator === 'debt') return translate(language, 'csv.debt')
+  if (indicator === 'gdpPerCapita') return translate(language, 'csv.gdpPerCapita')
+  return translate(language, 'csv.consumptionPerCapita')
+}
+
+function csvUnit(language: Language, indicator: IndicatorKey) {
+  if (indicator === 'growth') return '%'
+  if (indicator === 'debt') return translate(language, 'unit.debt')
+  return translate(language, 'unit.perCapita')
+}
+
 export function buildCsv(
   mode: ComparisonMode,
   countries: Country[],
@@ -38,9 +51,9 @@ export function buildCsv(
           country.code,
           country.name,
           point.year,
-          translate(language, indicator === 'growth' ? 'csv.growth' : 'csv.debt'),
+          csvIndicator(language, indicator),
           point.value,
-          indicator === 'growth' ? '%' : translate(language, 'unit.debt'),
+          csvUnit(language, indicator),
           point.source,
           statusLabel(point.status, language),
         ])

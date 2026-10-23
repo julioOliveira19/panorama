@@ -4,7 +4,7 @@ import { init, use as registerECharts } from 'echarts/core'
 import type { EChartsOption } from 'echarts'
 import { SVGRenderer } from 'echarts/renderers'
 import { useEffect, useMemo, useRef } from 'react'
-import { formatValue, statusLabel } from '../lib/format'
+import { formatPerCapita, formatValue, statusLabel } from '../lib/format'
 import { yearsInRange } from '../lib/calculations'
 import { translate } from '../lib/i18n'
 import type { ComparisonMode, Country, IndicatorKey, Language, PanoramaData, Theme } from '../types'
@@ -30,6 +30,7 @@ type TooltipItem = {
     source?: string
     status?: string
     unit?: string
+    indicator?: IndicatorKey
   } | number | null
   axisValue?: string
 }
@@ -39,6 +40,7 @@ type ChartDatum = {
   source: string
   status: string
   unit: string
+  indicator: IndicatorKey
 } | null
 
 export function TimeSeriesChart({
@@ -83,16 +85,20 @@ export function TimeSeriesChart({
         const color = mode === 'both' && indicator === 'debt'
           ? debtColors[countryIndex]
           : countryColors[countryIndex]
-        const unit = indicator === 'growth' ? '%' : translate(language, 'unit.debt')
+        const unit = indicator === 'growth'
+          ? '%'
+          : indicator === 'debt'
+            ? translate(language, 'unit.debt')
+            : translate(language, 'unit.perCapita')
         const observed: ChartDatum[] = years.map((year) => {
           const point = pointByYear.get(year)
           if (!point || point.status === 'projection') return null
-          return { value: point.value, source: point.source, status: point.status, unit }
+          return { value: point.value, source: point.source, status: point.status, unit, indicator }
         })
         const projected: ChartDatum[] = years.map((year) => {
           const point = pointByYear.get(year)
           if (!point || point.status !== 'projection') return null
-          return { value: point.value, source: point.source, status: point.status, unit }
+          return { value: point.value, source: point.source, status: point.status, unit, indicator }
         })
 
         const firstProjection = projected.findIndex(Boolean)
@@ -161,8 +167,11 @@ export function TimeSeriesChart({
           const lines = [`<strong>${params[0]?.axisValue ?? ''}</strong>`]
           for (const item of unique.values()) {
             const data = typeof item.data === 'object' && item.data ? item.data : null
+            const formattedValue = data?.indicator === 'gdpPerCapita' || data?.indicator === 'consumptionPerCapita'
+              ? formatPerCapita(data?.value, language)
+              : formatValue(data?.value, language)
             lines.push(
-              `${item.marker}${item.seriesName}: <strong>${formatValue(data?.value, language)}${data?.unit ? ` ${data.unit}` : ''}</strong>` +
+              `${item.marker}${item.seriesName}: <strong>${formattedValue}${data?.unit ? ` ${data.unit}` : ''}</strong>` +
               `<small style="display:block;margin-left:18px;opacity:.72">${data?.source ?? ''} · ${statusLabel(data?.status ?? '', language)}</small>`,
             )
           }
@@ -195,9 +204,23 @@ export function TimeSeriesChart({
           ]
         : {
             type: 'value',
-            name: translate(language, mode === 'growth' ? 'chart.growthUnit' : 'chart.debtUnit'),
+            name: translate(
+              language,
+              mode === 'growth'
+                ? 'chart.growthUnit'
+                : mode === 'debt'
+                  ? 'chart.debtUnit'
+                  : mode === 'gdpPerCapita'
+                    ? 'chart.gdpPerCapitaAxis'
+                    : 'chart.consumptionPerCapitaAxis',
+            ),
             nameTextStyle: { color: chartUi.text, padding: [0, 0, 8, 0] },
-            axisLabel: { color: chartUi.text, formatter: (value: number) => formatValue(value, language) },
+            axisLabel: {
+              color: chartUi.text,
+              formatter: (value: number) => mode === 'gdpPerCapita' || mode === 'consumptionPerCapita'
+                ? formatPerCapita(value, language)
+                : formatValue(value, language),
+            },
             splitLine: { lineStyle: { color: chartUi.grid } },
           },
       series: chartSeries,
@@ -214,7 +237,15 @@ export function TimeSeriesChart({
 
   const title = translate(
     language,
-    mode === 'growth' ? 'chart.growthTitle' : mode === 'debt' ? 'chart.debtTitle' : 'chart.bothTitle',
+    mode === 'growth'
+      ? 'chart.growthTitle'
+      : mode === 'debt'
+        ? 'chart.debtTitle'
+        : mode === 'gdpPerCapita'
+          ? 'chart.gdpPerCapitaTitle'
+          : mode === 'consumptionPerCapita'
+            ? 'chart.consumptionPerCapitaTitle'
+            : 'chart.bothTitle',
   )
 
   return (
@@ -231,7 +262,9 @@ export function TimeSeriesChart({
               <span className="chart-key"><i className="key-debt" /> {translate(language, 'chart.debt')}</span>
             </>
           )}
-          <span className="chart-key"><i className="key-projection" /> {translate(language, 'chart.projection')}</span>
+          {(mode === 'growth' || mode === 'debt' || mode === 'both') && (
+            <span className="chart-key"><i className="key-projection" /> {translate(language, 'chart.projection')}</span>
+          )}
         </div>
       </div>
       <div ref={chartRef} className="chart" role="img" aria-label={translate(language, 'chart.aria', { title: title.toLowerCase() })} />

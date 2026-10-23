@@ -1,5 +1,5 @@
-import { debtSummary, growthSummary } from '../lib/calculations'
-import { formatSigned, formatValue } from '../lib/format'
+import { debtSummary, growthSummary, levelSummary } from '../lib/calculations'
+import { formatPerCapita, formatSigned, formatSignedPerCapita, formatValue } from '../lib/format'
 import { translate } from '../lib/i18n'
 import type { ComparisonMode, Country, Language, PanoramaData } from '../types'
 import { countryColors } from '../types'
@@ -75,17 +75,36 @@ export function SummaryCards({
             )
           }
 
+          if (mode === 'debt') {
+            return (
+              <article className="summary-card" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
+                <h3>{country.name}</h3>
+                <div className="summary-primary">
+                  <strong>{formatSigned(debt.change, language)} p.p.</strong>
+                  <span>{translate(language, 'summary.periodChange')}</span>
+                </div>
+                <dl>
+                  <div><dt>{translate(language, 'summary.initialValue')}</dt><dd>{formatValue(debt.initial, language)}%</dd></div>
+                  <div><dt>{translate(language, 'summary.finalValue')}</dt><dd>{formatValue(debt.final, language)}%</dd></div>
+                  <div><dt>{translate(language, 'summary.validMissing')}</dt><dd>{debt.validYears} / {debt.missingYears}</dd></div>
+                </dl>
+              </article>
+            )
+          }
+
+          const level = levelSummary(series[mode][country.code] ?? [], startYear, endYear)
           return (
             <article className="summary-card" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
               <h3>{country.name}</h3>
               <div className="summary-primary">
-                <strong>{formatSigned(debt.change, language)} p.p.</strong>
-                <span>{translate(language, 'summary.periodChange')}</span>
+                <strong>{formatPerCapita(level.final, language)} int$</strong>
+                <span>{translate(language, 'summary.latestValue')}</span>
               </div>
               <dl>
-                <div><dt>{translate(language, 'summary.initialValue')}</dt><dd>{formatValue(debt.initial, language)}%</dd></div>
-                <div><dt>{translate(language, 'summary.finalValue')}</dt><dd>{formatValue(debt.final, language)}%</dd></div>
-                <div><dt>{translate(language, 'summary.validMissing')}</dt><dd>{debt.validYears} / {debt.missingYears}</dd></div>
+                <div><dt>{translate(language, 'summary.periodGrowth')}</dt><dd>{formatSigned(level.percentChange, language)}%</dd></div>
+                <div><dt>{translate(language, 'summary.annualizedGrowth')}</dt><dd>{formatSigned(level.annualizedChange, language)}%</dd></div>
+                <div><dt>{translate(language, 'summary.absoluteChange')}</dt><dd>{formatSignedPerCapita(level.absoluteChange, language)}</dd></div>
+                <div><dt>{translate(language, 'summary.validMissing')}</dt><dd>{level.validYears} / {level.missingYears}</dd></div>
               </dl>
             </article>
           )

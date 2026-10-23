@@ -79,7 +79,7 @@ function PanoramaApp() {
   const { data, map } = loaded
   const availableCodes = new Set(
     data.countries
-      .filter((country) => country.availability.growth || country.availability.debt)
+      .filter((country) => Object.values(country.availability).some(Boolean))
       .map(({ code }) => code),
   )
 
@@ -174,6 +174,12 @@ function PanoramaApp() {
               </button>
               <button type="button" aria-pressed={mode === 'debt'} onClick={() => setMode('debt')}>
                 {translate(language, 'controls.debt')}
+              </button>
+              <button type="button" aria-pressed={mode === 'gdpPerCapita'} onClick={() => setMode('gdpPerCapita')}>
+                {translate(language, 'controls.gdpPerCapita')}
+              </button>
+              <button type="button" aria-pressed={mode === 'consumptionPerCapita'} onClick={() => setMode('consumptionPerCapita')}>
+                {translate(language, 'controls.consumptionPerCapita')}
               </button>
               <button type="button" aria-pressed={mode === 'both'} onClick={() => setMode('both')}>
                 {translate(language, 'controls.both')}

@@ -10,6 +10,8 @@ Indicadores:
 
 1. Crescimento real anual do PIB (%).
 2. Dívida pública bruta do governo geral (% do PIB).
+3. PIB per capita em PPC, dólares internacionais constantes de 2021.
+4. Consumo das famílias per capita em PPC, dólares internacionais constantes de 2021.
 
 Recursos:
 
@@ -31,6 +33,8 @@ O Public Finances in Modern History (FPP) é a fonte histórica principal. Os c�
 
 O importador normaliza os dados em registros com país, ano, indicador, valor, unidade, fonte e estado. O WEO só é acrescentado depois do último ano FPP disponível por país e indicador. Mudanças de fonte permanecem visíveis.
 
+O World Development Indicators do Banco Mundial fornece `NY.GDP.PCAP.PP.KD` para PIB per capita e `NE.CON.PCAP.PP.KD` para consumo das famílias per capita. As duas séries usam PPC em dólares internacionais constantes de 2021, começam em 1990 para Brasil, Peru e Japão e preservam lacunas sem convertê-las em zero.
+
 ## Regras econômicas
 
 - Crescimento anual não deve ser somado como percentual simples.
@@ -38,6 +42,7 @@ O importador normaliza os dados em registros com país, ano, indicador, valor, u
 - O acumulado, quando exibido, usa o produto das variações.
 - Dívida é estoque; déficit é fluxo e não faz parte deste MVP.
 - Dívida/PIB pode cair mesmo com déficit.
+- PIB per capita e consumo per capita são medidas distintas; ambas são exibidas separadamente e não representam distribuição de renda.
 - Correlação visual não é prova de causalidade.
 
 ## Critérios de aceite
@@ -47,4 +52,5 @@ O importador normaliza os dados em registros com país, ano, indicador, valor, u
 - Japão possui visualização histórica em 1955–1964, incluindo lacunas quando existirem.
 - Trocar indicador ou período mantém os países.
 - CSV, fontes, unidades e estados dos dados aparecem corretamente.
+- Brasil e Peru possuem PIB e consumo per capita desde 1990; lacunas de outros países permanecem visíveis.
 - `npm run check` passa antes da entrega.

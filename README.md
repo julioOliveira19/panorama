@@ -1,6 +1,6 @@
 # Panorama
 
-Comparador histórico de países para crescimento real anual do PIB e dívida pública bruta como porcentagem do PIB. Os indicadores podem ser vistos separadamente ou juntos, com escalas e tonalidades independentes. O mapa permite zoom e arraste, e a interface oferece temas claro e escuro em português do Brasil, inglês e espanhol. A aplicação usa dados do Fundo Monetário Internacional, mantém lacunas como ausências e distingue projeções recentes.
+Comparador histórico de países para crescimento real anual do PIB, dívida pública bruta, PIB per capita e consumo das famílias per capita. Crescimento e dívida podem ser vistos separadamente ou juntos; os indicadores per capita usam PPC em dólares internacionais constantes de 2021. O mapa permite zoom e arraste, e a interface oferece temas claro e escuro em português do Brasil, inglês e espanhol. A aplicação usa dados do Fundo Monetário Internacional e do Banco Mundial, mantém lacunas como ausências e distingue projeções recentes.
 
 O idioma pode ser alterado no canto superior direito. A preferência fica salva no navegador e também localiza nomes de países, números, datas, gráficos, tabelas e o CSV exportado.
 
@@ -41,7 +41,12 @@ O importador consulta quatro séries oficiais do DataMapper:
 - WEO `NGDP_RPCH`: crescimento real recente e projeções.
 - WEO `GGXWDG_NGDP`: dívida bruta do governo geral recente e projeções.
 
-Os arquivos originais ficam em `data/raw`. Os arquivos consumidos pelo site ficam em `public/data`. O FPP é preservado como histórico; o WEO é acrescentado somente após o último ano FPP disponível para cada país e indicador.
+Também consulta duas séries do World Development Indicators, do Banco Mundial:
+
+- `NY.GDP.PCAP.PP.KD`: PIB per capita em PPC constante.
+- `NE.CON.PCAP.PP.KD`: consumo das famílias per capita em PPC constante.
+
+Os arquivos originais ficam em `data/raw`. Os arquivos consumidos pelo site ficam em `public/data`. O FPP é preservado como histórico; o WEO é acrescentado somente após o último ano FPP disponível para cada país e indicador. Os indicadores per capita do Banco Mundial são publicados separadamente, sem projeções e sem preencher lacunas com zero.
 
 ## Verificações
 
@@ -67,6 +72,7 @@ O projeto usa caminhos relativos e funciona em endereços como `https://usuario.
 - Média de crescimento é a média aritmética das taxas anuais disponíveis.
 - Crescimento acumulado é calculado separadamente por composição.
 - Mudança da dívida é apresentada em pontos percentuais.
+- PIB e consumo per capita são comparados em dólares internacionais constantes de 2021.
 - Observações, estimativas e projeções são identificadas.
 - Comparações são descritivas e não demonstram causalidade.
 
@@ -75,3 +81,4 @@ O projeto usa caminhos relativos e funciona em endereços como `https://usuario.
 - [Public Finances in Modern History — FMI](https://www.imf.org/external/datamapper/datasets/FPP)
 - [World Economic Outlook — FMI](https://data.imf.org/Datasets/WEO)
 - [Documentação da API DataMapper](https://www.imf.org/external/datamapper/api/)
+- [World Development Indicators — Banco Mundial](https://data.worldbank.org/)
