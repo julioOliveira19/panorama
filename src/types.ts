@@ -3,6 +3,7 @@ import { z } from 'zod'
 export const indicatorKeySchema = z.enum(['growth', 'debt'])
 export type IndicatorKey = z.infer<typeof indicatorKeySchema>
 export type ComparisonMode = IndicatorKey | 'both'
+export type Theme = 'light' | 'dark'
 
 export const dataPointSchema = z.object({
   year: z.number().int(),

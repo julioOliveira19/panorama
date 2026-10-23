@@ -8,12 +8,14 @@ import { WorldMap } from './components/WorldMap'
 import { loadPanorama } from './lib/data'
 import { buildCsv, downloadCsv } from './lib/exportCsv'
 import { formatDate } from './lib/format'
-import type { ComparisonMode, PanoramaData, WorldMapData } from './types'
+import { getInitialTheme, saveTheme } from './lib/theme'
+import type { ComparisonMode, PanoramaData, Theme, WorldMapData } from './types'
 
 type LoadedState = { data: PanoramaData; map: WorldMapData }
 const initialCountries = ['BRA', 'PER']
 
 function PanoramaApp() {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
   const [loaded, setLoaded] = useState<LoadedState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<ComparisonMode>('growth')
@@ -21,6 +23,10 @@ function PanoramaApp() {
   const [startYear, setStartYear] = useState(2000)
   const [endYear, setEndYear] = useState(2014)
   const [notice, setNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    saveTheme(theme)
+  }, [theme])
 
   useEffect(() => {
     loadPanorama()
@@ -100,6 +106,19 @@ function PanoramaApp() {
           <a href="#metodologia">Metodologia</a>
         </nav>
         <span className="source-pill">Dados do FMI</span>
+        <button
+          className="theme-toggle"
+          type="button"
+          aria-label={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
+          title={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
+          onClick={() => setTheme((current) => current === 'light' ? 'dark' : 'light')}
+        >
+          {theme === 'light' ? (
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.2A8.5 8.5 0 0 1 8.8 3.8 8.5 8.5 0 1 0 20.2 15.2Z" /></svg>
+          ) : (
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></svg>
+          )}
+        </button>
       </header>
 
       <main id="top">
@@ -161,7 +180,7 @@ function PanoramaApp() {
 
         <div className="visual-grid">
           <WorldMap map={map} availableCodes={availableCodes} selectedCodes={selectedCodes} onSelect={changeSelection} />
-          <TimeSeriesChart countries={selectedCountries} mode={mode} series={data.series} startYear={startYear} endYear={endYear} />
+          <TimeSeriesChart countries={selectedCountries} mode={mode} series={data.series} startYear={startYear} endYear={endYear} theme={theme} />
         </div>
 
         {selectedCountries.length > 0 ? (

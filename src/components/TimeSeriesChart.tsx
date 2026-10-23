@@ -6,7 +6,7 @@ import { SVGRenderer } from 'echarts/renderers'
 import { useEffect, useMemo, useRef } from 'react'
 import { formatValue, statusLabel } from '../lib/format'
 import { yearsInRange } from '../lib/calculations'
-import type { ComparisonMode, Country, IndicatorKey, PanoramaData } from '../types'
+import type { ComparisonMode, Country, IndicatorKey, PanoramaData, Theme } from '../types'
 import { countryColors, debtColors } from '../types'
 
 registerECharts([LineChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer])
@@ -17,6 +17,7 @@ type TimeSeriesChartProps = {
   series: PanoramaData['series']
   startYear: number
   endYear: number
+  theme: Theme
 }
 
 type TooltipItem = {
@@ -44,6 +45,7 @@ export function TimeSeriesChart({
   series,
   startYear,
   endYear,
+  theme,
 }: TimeSeriesChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
   const years = useMemo(() => yearsInRange(startYear, endYear), [startYear, endYear])
@@ -51,6 +53,23 @@ export function TimeSeriesChart({
   useEffect(() => {
     if (!chartRef.current) return
     const chart = init(chartRef.current, undefined, { renderer: 'svg' })
+    const chartUi = theme === 'dark'
+      ? {
+          text: '#a4b2ac',
+          textStrong: '#dce7e2',
+          axis: '#56635e',
+          grid: '#2d3934',
+          tooltipBackground: '#e7f0eb',
+          tooltipText: '#13201b',
+        }
+      : {
+          text: '#61706b',
+          textStrong: '#34433e',
+          axis: '#b8c4bf',
+          grid: '#e7ece9',
+          tooltipBackground: '#10251f',
+          tooltipText: '#fff',
+        }
 
     const indicators: IndicatorKey[] = mode === 'both' ? ['growth', 'debt'] : [mode]
     const chartSeries = countries.flatMap((country, countryIndex) =>
@@ -121,13 +140,13 @@ export function TimeSeriesChart({
       legend: {
         top: 10,
         type: 'scroll',
-        textStyle: { color: '#34433e', fontFamily: 'system-ui' },
+        textStyle: { color: chartUi.textStrong, fontFamily: 'system-ui' },
       },
       tooltip: {
         trigger: 'axis',
-        backgroundColor: '#10251f',
+        backgroundColor: chartUi.tooltipBackground,
         borderWidth: 0,
-        textStyle: { color: '#fff' },
+        textStyle: { color: chartUi.tooltipText },
         formatter: (rawParams) => {
           const params = rawParams as unknown as TooltipItem[]
           const unique = new Map<string, TooltipItem>()
@@ -151,32 +170,32 @@ export function TimeSeriesChart({
         type: 'category',
         data: years.map(String),
         boundaryGap: false,
-        axisLine: { lineStyle: { color: '#b8c4bf' } },
-        axisLabel: { color: '#61706b', hideOverlap: true },
+        axisLine: { lineStyle: { color: chartUi.axis } },
+        axisLabel: { color: chartUi.text, hideOverlap: true },
       },
       yAxis: mode === 'both'
         ? [
             {
               type: 'value',
               name: 'PIB · % ao ano',
-              nameTextStyle: { color: '#61706b', padding: [0, 0, 8, 0] },
-              axisLabel: { color: '#61706b', formatter: (value: number) => formatValue(value) },
-              splitLine: { lineStyle: { color: '#e7ece9' } },
+              nameTextStyle: { color: chartUi.text, padding: [0, 0, 8, 0] },
+              axisLabel: { color: chartUi.text, formatter: (value: number) => formatValue(value) },
+              splitLine: { lineStyle: { color: chartUi.grid } },
             },
             {
               type: 'value',
               name: 'Dívida · % do PIB',
-              nameTextStyle: { color: '#61706b', padding: [0, 0, 8, 0] },
-              axisLabel: { color: '#61706b', formatter: (value: number) => formatValue(value) },
+              nameTextStyle: { color: chartUi.text, padding: [0, 0, 8, 0] },
+              axisLabel: { color: chartUi.text, formatter: (value: number) => formatValue(value) },
               splitLine: { show: false },
             },
           ]
         : {
             type: 'value',
             name: mode === 'growth' ? '% ao ano' : '% do PIB',
-            nameTextStyle: { color: '#61706b', padding: [0, 0, 8, 0] },
-            axisLabel: { color: '#61706b', formatter: (value: number) => formatValue(value) },
-            splitLine: { lineStyle: { color: '#e7ece9' } },
+            nameTextStyle: { color: chartUi.text, padding: [0, 0, 8, 0] },
+            axisLabel: { color: chartUi.text, formatter: (value: number) => formatValue(value) },
+            splitLine: { lineStyle: { color: chartUi.grid } },
           },
       series: chartSeries,
     }
@@ -188,7 +207,7 @@ export function TimeSeriesChart({
       observer.disconnect()
       chart.dispose()
     }
-  }, [countries, endYear, mode, series, startYear, years])
+  }, [countries, endYear, mode, series, startYear, theme, years])
 
   const title = mode === 'growth'
     ? 'Crescimento real do PIB'
