@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import type { Country } from '../types'
+import { translate } from '../lib/i18n'
+import type { Country, Language } from '../types'
 import { countryColors } from '../types'
 
 type CountrySelectorProps = {
@@ -7,6 +8,7 @@ type CountrySelectorProps = {
   selectedCodes: string[]
   onToggle: (code: string) => void
   onRemove: (code: string) => void
+  language: Language
 }
 
 function normalize(value: string) {
@@ -18,6 +20,7 @@ export function CountrySelector({
   selectedCodes,
   onToggle,
   onRemove,
+  language,
 }: CountrySelectorProps) {
   const [query, setQuery] = useState('')
   const selected = countries.filter(({ code }) => selectedCodes.includes(code))
@@ -30,7 +33,7 @@ export function CountrySelector({
 
   return (
     <div className="country-picker">
-      <div className="selected-countries" aria-label="Países selecionados">
+      <div className="selected-countries" aria-label={translate(language, 'countries.selected')}>
         {selected.map((country) => {
           const color = countryColors[selectedCodes.indexOf(country.code)]
           return (
@@ -40,7 +43,7 @@ export function CountrySelector({
               onClick={() => onRemove(country.code)}
               style={{ '--country-color': color } as React.CSSProperties}
               type="button"
-              title={`Remover ${country.name}`}
+              title={translate(language, 'countries.remove', { country: country.name })}
             >
               <span className="country-dot" />
               {country.name}
@@ -48,21 +51,21 @@ export function CountrySelector({
             </button>
           )
         })}
-        <span className="selection-count">{selectedCodes.length}/5 países</span>
+        <span className="selection-count">{translate(language, 'countries.count', { count: selectedCodes.length })}</span>
       </div>
 
       <label className="search-field">
-        <span>Adicionar país</span>
+        <span>{translate(language, 'countries.addLabel')}</span>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Busque por nome ou código"
+          placeholder={translate(language, 'countries.searchPlaceholder')}
         />
       </label>
 
       {query && (
-        <div className="country-results" role="listbox" aria-label="Resultados da busca">
+        <div className="country-results" role="listbox" aria-label={translate(language, 'countries.searchResults')}>
           {results.map((country) => {
             const isSelected = selectedCodes.includes(country.code)
             const isDisabled = !isSelected && selectedCodes.length >= 5
@@ -80,11 +83,11 @@ export function CountrySelector({
               >
                 <span>{country.name}</span>
                 <small>{country.code}</small>
-                <strong>{isSelected ? 'Selecionado' : 'Adicionar'}</strong>
+                <strong>{translate(language, isSelected ? 'countries.selectedStatus' : 'countries.add')}</strong>
               </button>
             )
           })}
-          {results.length === 0 && <p>Nenhum país encontrado.</p>}
+          {results.length === 0 && <p>{translate(language, 'countries.none')}</p>}
         </div>
       )}
     </div>

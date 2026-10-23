@@ -1,7 +1,8 @@
 import { geoNaturalEarth1, geoPath } from 'd3-geo'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import type { WorldMapData } from '../types'
+import { localizedCountryName, translate } from '../lib/i18n'
+import type { Language, WorldMapData } from '../types'
 import { countryColors } from '../types'
 
 const MAP_WIDTH = 920
@@ -29,9 +30,10 @@ type WorldMapProps = {
   availableCodes: Set<string>
   selectedCodes: string[]
   onSelect: (code: string, additive: boolean) => void
+  language: Language
 }
 
-export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: WorldMapProps) {
+export function WorldMap({ map, availableCodes, selectedCodes, onSelect, language }: WorldMapProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [transform, setTransform] = useState<MapTransform>({ scale: 1, x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -137,10 +139,10 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
     <section className="panel map-panel" aria-labelledby="map-title">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Seleção geográfica</p>
-          <h2 id="map-title">Mapa-múndi</h2>
+          <p className="eyebrow">{translate(language, 'map.eyebrow')}</p>
+          <h2 id="map-title">{translate(language, 'map.title')}</h2>
         </div>
-        <p className="panel-help">Clique para escolher. Use +/− ou a roda para aproximar; arraste quando ampliado.</p>
+        <p className="panel-help">{translate(language, 'map.help')}</p>
       </div>
 
       <div className="map-frame">
@@ -148,7 +150,7 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
           ref={svgRef}
           viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
           role="img"
-          aria-label={`Mapa interativo de países, zoom em ${Math.round(transform.scale * 100)}%`}
+          aria-label={translate(language, 'map.aria', { zoom: Math.round(transform.scale * 100) })}
           className={`map-viewport ${transform.scale > 1 ? 'is-zoomed' : ''} ${isDragging ? 'is-dragging' : ''}`}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -162,6 +164,7 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
               const selectedIndex = selectedCodes.indexOf(code)
               const isSelected = selectedIndex >= 0
               const isAvailable = availableCodes.has(code)
+              const countryName = localizedCountryName(language, code, feature.properties.name)
               return (
                 <path
                   key={code}
@@ -170,7 +173,7 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
                   style={isSelected ? { fill: countryColors[selectedIndex] } : undefined}
                   role={isAvailable ? 'button' : undefined}
                   tabIndex={isAvailable ? 0 : -1}
-                  aria-label={`${feature.properties.name}${isSelected ? ', selecionado' : ''}`}
+                  aria-label={`${countryName}${isSelected ? translate(language, 'map.selectedSuffix') : ''}`}
                   aria-disabled={!isAvailable}
                   onClick={(event) => {
                     if (performance.now() < suppressClickUntil.current) return
@@ -183,21 +186,21 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
                     }
                   }}
                 >
-                  <title>{feature.properties.name}</title>
+                  <title>{countryName}</title>
                 </path>
               )
             })}
           </g>
         </svg>
-        <div className="map-controls" aria-label="Controles de zoom do mapa">
-          <button type="button" onClick={() => zoomBy(1.5)} disabled={transform.scale >= MAX_ZOOM} aria-label="Aumentar zoom">+</button>
-          <button type="button" onClick={() => zoomBy(1 / 1.5)} disabled={transform.scale <= 1} aria-label="Diminuir zoom">−</button>
+        <div className="map-controls" aria-label={translate(language, 'map.zoomControls')}>
+          <button type="button" onClick={() => zoomBy(1.5)} disabled={transform.scale >= MAX_ZOOM} aria-label={translate(language, 'map.zoomIn')}>+</button>
+          <button type="button" onClick={() => zoomBy(1 / 1.5)} disabled={transform.scale <= 1} aria-label={translate(language, 'map.zoomOut')}>−</button>
           <button
             type="button"
             className="map-reset"
             onClick={() => setTransform({ scale: 1, x: 0, y: 0 })}
             disabled={transform.scale === 1}
-            aria-label="Redefinir zoom"
+            aria-label={translate(language, 'map.zoomReset')}
           >
             {Math.round(transform.scale * 100)}%
           </button>

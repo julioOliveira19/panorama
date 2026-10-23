@@ -1,6 +1,8 @@
 # Panorama
 
-Comparador histórico de países para crescimento real anual do PIB e dívida pública bruta como porcentagem do PIB. Os indicadores podem ser vistos separadamente ou juntos, com escalas e tonalidades independentes. O mapa permite zoom e arraste, e a interface oferece temas claro e escuro. A aplicação usa dados do Fundo Monetário Internacional, mantém lacunas como ausências e distingue projeções recentes.
+Comparador histórico de países para crescimento real anual do PIB e dívida pública bruta como porcentagem do PIB. Os indicadores podem ser vistos separadamente ou juntos, com escalas e tonalidades independentes. O mapa permite zoom e arraste, e a interface oferece temas claro e escuro em português do Brasil, inglês e espanhol. A aplicação usa dados do Fundo Monetário Internacional, mantém lacunas como ausências e distingue projeções recentes.
+
+O idioma pode ser alterado no canto superior direito. A preferência fica salva no navegador e também localiza nomes de países, números, datas, gráficos, tabelas e o CSV exportado.
 
 ## Executar no Windows
 

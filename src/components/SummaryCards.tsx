@@ -1,6 +1,7 @@
 import { debtSummary, growthSummary } from '../lib/calculations'
 import { formatSigned, formatValue } from '../lib/format'
-import type { ComparisonMode, Country, PanoramaData } from '../types'
+import { translate } from '../lib/i18n'
+import type { ComparisonMode, Country, Language, PanoramaData } from '../types'
 import { countryColors } from '../types'
 
 type SummaryCardsProps = {
@@ -9,6 +10,7 @@ type SummaryCardsProps = {
   series: PanoramaData['series']
   startYear: number
   endYear: number
+  language: Language
 }
 
 export function SummaryCards({
@@ -17,15 +19,16 @@ export function SummaryCards({
   series,
   startYear,
   endYear,
+  language,
 }: SummaryCardsProps) {
   return (
     <section className="summary-section" aria-labelledby="summary-title">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">Resumo do período</p>
-          <h2 id="summary-title">O que aconteceu entre {startYear} e {endYear}</h2>
+          <p className="eyebrow">{translate(language, 'summary.eyebrow')}</p>
+          <h2 id="summary-title">{translate(language, 'summary.title', { start: startYear, end: endYear })}</h2>
         </div>
-        <p>Os cálculos ignoram lacunas; anos sem dados nunca entram como zero.</p>
+        <p>{translate(language, 'summary.note')}</p>
       </div>
       <div className="summary-grid">
         {countries.map((country, index) => {
@@ -38,18 +41,18 @@ export function SummaryCards({
                 <h3>{country.name}</h3>
                 <div className="summary-dual">
                   <div>
-                    <span>Crescimento médio</span>
-                    <strong>{formatValue(growth.average)}%</strong>
-                    <small>Acumulado: {formatSigned(growth.cumulative)}%</small>
+                    <span>{translate(language, 'summary.averageGrowth')}</span>
+                    <strong>{formatValue(growth.average, language)}%</strong>
+                    <small>{translate(language, 'summary.accumulated', { value: formatSigned(growth.cumulative, language) })}</small>
                   </div>
                   <div>
-                    <span>Dívida no período</span>
-                    <strong>{formatSigned(debt.change)} p.p.</strong>
-                    <small>{formatValue(debt.initial)}% → {formatValue(debt.final)}% do PIB</small>
+                    <span>{translate(language, 'summary.debtPeriod')}</span>
+                    <strong>{formatSigned(debt.change, language)} p.p.</strong>
+                    <small>{translate(language, 'summary.debtRange', { initial: formatValue(debt.initial, language), final: formatValue(debt.final, language) })}</small>
                   </div>
                 </div>
                 <p className="summary-coverage">
-                  Anos válidos: PIB {growth.validYears} · Dívida {debt.validYears}
+                  {translate(language, 'summary.validBoth', { growth: growth.validYears, debt: debt.validYears })}
                 </p>
               </article>
             )
@@ -60,13 +63,13 @@ export function SummaryCards({
               <article className="summary-card" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
                 <h3>{country.name}</h3>
                 <div className="summary-primary">
-                  <strong>{formatValue(growth.average)}%</strong>
-                  <span>média anual</span>
+                  <strong>{formatValue(growth.average, language)}%</strong>
+                  <span>{translate(language, 'summary.annualAverage')}</span>
                 </div>
                 <dl>
-                  <div><dt>Crescimento acumulado</dt><dd>{formatSigned(growth.cumulative)}%</dd></div>
-                  <div><dt>Anos válidos</dt><dd>{growth.validYears}</dd></div>
-                  <div><dt>Anos ausentes</dt><dd>{growth.missingYears}</dd></div>
+                  <div><dt>{translate(language, 'summary.cumulativeGrowth')}</dt><dd>{formatSigned(growth.cumulative, language)}%</dd></div>
+                  <div><dt>{translate(language, 'summary.validYears')}</dt><dd>{growth.validYears}</dd></div>
+                  <div><dt>{translate(language, 'summary.missingYears')}</dt><dd>{growth.missingYears}</dd></div>
                 </dl>
               </article>
             )
@@ -76,13 +79,13 @@ export function SummaryCards({
             <article className="summary-card" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
               <h3>{country.name}</h3>
               <div className="summary-primary">
-                <strong>{formatSigned(debt.change)} p.p.</strong>
-                <span>variação no período</span>
+                <strong>{formatSigned(debt.change, language)} p.p.</strong>
+                <span>{translate(language, 'summary.periodChange')}</span>
               </div>
               <dl>
-                <div><dt>Valor inicial</dt><dd>{formatValue(debt.initial)}%</dd></div>
-                <div><dt>Valor final</dt><dd>{formatValue(debt.final)}%</dd></div>
-                <div><dt>Anos válidos / ausentes</dt><dd>{debt.validYears} / {debt.missingYears}</dd></div>
+                <div><dt>{translate(language, 'summary.initialValue')}</dt><dd>{formatValue(debt.initial, language)}%</dd></div>
+                <div><dt>{translate(language, 'summary.finalValue')}</dt><dd>{formatValue(debt.final, language)}%</dd></div>
+                <div><dt>{translate(language, 'summary.validMissing')}</dt><dd>{debt.validYears} / {debt.missingYears}</dd></div>
               </dl>
             </article>
           )

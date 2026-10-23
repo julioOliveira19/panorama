@@ -6,7 +6,13 @@
 .site-header nav { display: flex; gap: 28px; margin-left: auto; }
 .site-header nav a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 650; }
 .site-header nav a:hover { color: var(--ink); }
+.header-actions { display: flex; align-items: center; gap: 8px; }
 .source-pill { padding: 8px 13px; border: 1px solid var(--line); border-radius: 999px; color: var(--green); font-size: 12px; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
+.language-picker { display: flex; align-items: center; gap: 5px; height: 38px; padding: 0 7px 0 10px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 999px; }
+.language-picker svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.language-picker select { min-width: 58px; padding: 0 2px; color: inherit; background: transparent; border: 0; outline: 0; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.language-picker select:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; border-radius: 4px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .theme-toggle { display: grid; place-items: center; flex: none; width: 38px; height: 38px; padding: 0; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 50%; cursor: pointer; transition: color .2s, background-color .2s, transform .2s; }
 .theme-toggle:hover { color: var(--accent); transform: translateY(-1px); }
 .theme-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -154,7 +160,7 @@ footer p { margin: 0; }
   .site-header { height: 64px; }
   .site-header nav { display: none; }
   .source-pill { display: none; }
-  .theme-toggle { margin-left: auto; }
+  .header-actions { margin-left: auto; }
   .hero { min-height: 360px; padding: 54px 6px 42px; }
   .hero h1 { font-size: clamp(50px, 16vw, 74px); }
   .hero-description { margin-top: 24px; font-size: 16px; }

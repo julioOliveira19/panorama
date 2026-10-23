@@ -1,4 +1,7 @@
 import type { ComparisonMode, Country, IndicatorKey, PanoramaData } from '../types'
+import type { Language } from '../types'
+import { statusLabel } from './format'
+import { translate } from './i18n'
 
 function escapeCsv(value: string | number) {
   const text = String(value)
@@ -11,16 +14,17 @@ export function buildCsv(
   series: PanoramaData['series'],
   startYear: number,
   endYear: number,
+  language: Language = 'pt-BR',
 ) {
   const rows: Array<Array<string | number>> = [[
-    'pais_codigo',
-    'pais',
-    'ano',
-    'indicador',
-    'valor',
-    'unidade',
-    'fonte',
-    'status',
+    translate(language, 'csv.countryCode'),
+    translate(language, 'csv.country'),
+    translate(language, 'csv.year'),
+    translate(language, 'csv.indicator'),
+    translate(language, 'csv.value'),
+    translate(language, 'csv.unit'),
+    translate(language, 'csv.source'),
+    translate(language, 'csv.status'),
   ]]
   const indicators: IndicatorKey[] = mode === 'both' ? ['growth', 'debt'] : [mode]
 
@@ -34,11 +38,11 @@ export function buildCsv(
           country.code,
           country.name,
           point.year,
-          indicator,
+          translate(language, indicator === 'growth' ? 'csv.growth' : 'csv.debt'),
           point.value,
-          indicator === 'growth' ? '%' : '% do PIB',
+          indicator === 'growth' ? '%' : translate(language, 'unit.debt'),
           point.source,
-          point.status,
+          statusLabel(point.status, language),
         ])
       }
     }

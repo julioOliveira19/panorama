@@ -6,7 +6,8 @@ import { SVGRenderer } from 'echarts/renderers'
 import { useEffect, useMemo, useRef } from 'react'
 import { formatValue, statusLabel } from '../lib/format'
 import { yearsInRange } from '../lib/calculations'
-import type { ComparisonMode, Country, IndicatorKey, PanoramaData, Theme } from '../types'
+import { translate } from '../lib/i18n'
+import type { ComparisonMode, Country, IndicatorKey, Language, PanoramaData, Theme } from '../types'
 import { countryColors, debtColors } from '../types'
 
 registerECharts([LineChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer])
@@ -18,6 +19,7 @@ type TimeSeriesChartProps = {
   startYear: number
   endYear: number
   theme: Theme
+  language: Language
 }
 
 type TooltipItem = {
@@ -46,6 +48,7 @@ export function TimeSeriesChart({
   startYear,
   endYear,
   theme,
+  language,
 }: TimeSeriesChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
   const years = useMemo(() => yearsInRange(startYear, endYear), [startYear, endYear])
@@ -80,7 +83,7 @@ export function TimeSeriesChart({
         const color = mode === 'both' && indicator === 'debt'
           ? debtColors[countryIndex]
           : countryColors[countryIndex]
-        const unit = indicator === 'growth' ? '%' : '% do PIB'
+        const unit = indicator === 'growth' ? '%' : translate(language, 'unit.debt')
         const observed: ChartDatum[] = years.map((year) => {
           const point = pointByYear.get(year)
           if (!point || point.status === 'projection') return null
@@ -98,7 +101,7 @@ export function TimeSeriesChart({
         }
 
         const name = mode === 'both'
-          ? `${country.name} · ${indicator === 'growth' ? 'PIB' : 'Dívida'}`
+          ? `${country.name} · ${translate(language, indicator === 'growth' ? 'chart.gdp' : 'chart.debt')}`
           : country.name
         const symbol = indicator === 'growth' ? 'circle' : 'diamond'
 
@@ -159,8 +162,8 @@ export function TimeSeriesChart({
           for (const item of unique.values()) {
             const data = typeof item.data === 'object' && item.data ? item.data : null
             lines.push(
-              `${item.marker}${item.seriesName}: <strong>${formatValue(data?.value)}${data?.unit ? ` ${data.unit}` : ''}</strong>` +
-              `<small style="display:block;margin-left:18px;opacity:.72">${data?.source ?? ''} · ${statusLabel(data?.status ?? '')}</small>`,
+              `${item.marker}${item.seriesName}: <strong>${formatValue(data?.value, language)}${data?.unit ? ` ${data.unit}` : ''}</strong>` +
+              `<small style="display:block;margin-left:18px;opacity:.72">${data?.source ?? ''} · ${statusLabel(data?.status ?? '', language)}</small>`,
             )
           }
           return lines.join('<br/>')
@@ -177,24 +180,24 @@ export function TimeSeriesChart({
         ? [
             {
               type: 'value',
-              name: 'PIB · % ao ano',
+              name: translate(language, 'chart.growthAxis'),
               nameTextStyle: { color: chartUi.text, padding: [0, 0, 8, 0] },
-              axisLabel: { color: chartUi.text, formatter: (value: number) => formatValue(value) },
+              axisLabel: { color: chartUi.text, formatter: (value: number) => formatValue(value, language) },
               splitLine: { lineStyle: { color: chartUi.grid } },
             },
             {
               type: 'value',
-              name: 'Dívida · % do PIB',
+              name: translate(language, 'chart.debtAxis'),
               nameTextStyle: { color: chartUi.text, padding: [0, 0, 8, 0] },
-              axisLabel: { color: chartUi.text, formatter: (value: number) => formatValue(value) },
+              axisLabel: { color: chartUi.text, formatter: (value: number) => formatValue(value, language) },
               splitLine: { show: false },
             },
           ]
         : {
             type: 'value',
-            name: mode === 'growth' ? '% ao ano' : '% do PIB',
+            name: translate(language, mode === 'growth' ? 'chart.growthUnit' : 'chart.debtUnit'),
             nameTextStyle: { color: chartUi.text, padding: [0, 0, 8, 0] },
-            axisLabel: { color: chartUi.text, formatter: (value: number) => formatValue(value) },
+            axisLabel: { color: chartUi.text, formatter: (value: number) => formatValue(value, language) },
             splitLine: { lineStyle: { color: chartUi.grid } },
           },
       series: chartSeries,
@@ -207,32 +210,31 @@ export function TimeSeriesChart({
       observer.disconnect()
       chart.dispose()
     }
-  }, [countries, endYear, mode, series, startYear, theme, years])
+  }, [countries, endYear, language, mode, series, startYear, theme, years])
 
-  const title = mode === 'growth'
-    ? 'Crescimento real do PIB'
-    : mode === 'debt'
-      ? 'Dívida pública bruta'
-      : 'Crescimento do PIB × dívida pública'
+  const title = translate(
+    language,
+    mode === 'growth' ? 'chart.growthTitle' : mode === 'debt' ? 'chart.debtTitle' : 'chart.bothTitle',
+  )
 
   return (
     <section className="panel chart-panel" aria-labelledby="chart-title">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Série anual</p>
+          <p className="eyebrow">{translate(language, 'chart.eyebrow')}</p>
           <h2 id="chart-title">{title}</h2>
         </div>
-        <div className="chart-keys" aria-label="Legenda de estilos">
+        <div className="chart-keys" aria-label={translate(language, 'chart.stylesLegend')}>
           {mode === 'both' && (
             <>
-              <span className="chart-key"><i className="key-growth" /> PIB</span>
-              <span className="chart-key"><i className="key-debt" /> Dívida</span>
+              <span className="chart-key"><i className="key-growth" /> {translate(language, 'chart.gdp')}</span>
+              <span className="chart-key"><i className="key-debt" /> {translate(language, 'chart.debt')}</span>
             </>
           )}
-          <span className="chart-key"><i className="key-projection" /> Projeção WEO</span>
+          <span className="chart-key"><i className="key-projection" /> {translate(language, 'chart.projection')}</span>
         </div>
       </div>
-      <div ref={chartRef} className="chart" role="img" aria-label={`Gráfico anual de ${title.toLowerCase()}`} />
+      <div ref={chartRef} className="chart" role="img" aria-label={translate(language, 'chart.aria', { title: title.toLowerCase() })} />
     </section>
   )
 }

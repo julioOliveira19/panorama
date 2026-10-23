@@ -21,6 +21,7 @@ Recursos:
 - Gráfico anual, tabela, resumos e exportação CSV.
 - Visualização separada ou simultânea dos dois indicadores, com eixos adequados às unidades.
 - Temas claro e escuro com preferência salva no navegador.
+- Interface em português do Brasil, inglês e espanhol, com preferência salva no navegador.
 - Fonte, edição e estado de observação, estimativa ou projeção.
 - Ausência de dados exibida como ausência, nunca zero.
 

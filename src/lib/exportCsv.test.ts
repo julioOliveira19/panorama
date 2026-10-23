@@ -24,7 +24,14 @@ describe('buildCsv', () => {
   it('exporta os dois indicadores quando o modo ambos está selecionado', () => {
     const csv = buildCsv('both', [japan], series, 2000, 2000)
 
-    expect(csv).toContain('JPN,Japão,2000,growth,2.5,%,FPP,observation')
-    expect(csv).toContain('JPN,Japão,2000,debt,135.6,% do PIB,FPP,observation')
+    expect(csv).toContain('JPN,Japão,2000,crescimento_pib_real,2.5,%,FPP,observação')
+    expect(csv).toContain('JPN,Japão,2000,divida_publica,135.6,% do PIB,FPP,observação')
+  })
+
+  it('traduz cabeçalhos e valores controlados para inglês', () => {
+    const csv = buildCsv('growth', [{ ...japan, name: 'Japan' }], series, 2000, 2000, 'en')
+
+    expect(csv.split('\n')[0]).toBe('country_code,country,year,indicator,value,unit,source,status')
+    expect(csv).toContain('JPN,Japan,2000,real_gdp_growth,2.5,%,FPP,observation')
   })
 })
