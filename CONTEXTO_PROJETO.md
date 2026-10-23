@@ -15,7 +15,7 @@ Recursos:
 
 - Mapa-múndi interativo com zoom e arraste.
 - Seleção de até cinco países.
-- Clique simples para selecionar; Ctrl+clique para adicionar ou remover.
+- Clique simples seleciona ou desmarca o país; Ctrl+clique adiciona ou remove.
 - Busca de países para acessibilidade e celular.
 - Período configurável sem apagar a seleção.
 - Gráfico anual, tabela, resumos e exportação CSV.

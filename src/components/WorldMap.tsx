@@ -1,6 +1,6 @@
 import { geoNaturalEarth1, geoPath } from 'd3-geo'
-import { useMemo, useRef, useState } from 'react'
-import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { WorldMapData } from '../types'
 import { countryColors } from '../types'
 
@@ -32,6 +32,7 @@ type WorldMapProps = {
 }
 
 export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: WorldMapProps) {
+  const svgRef = useRef<SVGSVGElement>(null)
   const [transform, setTransform] = useState<MapTransform>({ scale: 1, x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const dragRef = useRef<{
@@ -40,6 +41,7 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
     clientY: number
     x: number
     y: number
+    moved: boolean
   } | null>(null)
   const suppressClickUntil = useRef(0)
   const paths = useMemo(() => {
@@ -63,26 +65,41 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
     })
   }
 
-  const handleWheel = (event: ReactWheelEvent<SVGSVGElement>) => {
-    event.preventDefault()
-    const bounds = event.currentTarget.getBoundingClientRect()
-    const centerX = (event.clientX - bounds.left) * MAP_WIDTH / bounds.width
-    const centerY = (event.clientY - bounds.top) * MAP_HEIGHT / bounds.height
-    const factor = event.deltaY < 0 ? 1.2 : 1 / 1.2
-    zoomBy(factor, centerX, centerY)
-  }
+  useEffect(() => {
+    const svg = svgRef.current
+    if (!svg) return
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const bounds = svg.getBoundingClientRect()
+      const centerX = (event.clientX - bounds.left) * MAP_WIDTH / bounds.width
+      const centerY = (event.clientY - bounds.top) * MAP_HEIGHT / bounds.height
+      const factor = event.deltaY < 0 ? 1.2 : 1 / 1.2
+      setTransform((current) => {
+        const scale = Math.min(MAX_ZOOM, Math.max(1, current.scale * factor))
+        const ratio = scale / current.scale
+        return clampTransform({
+          scale,
+          x: centerX - (centerX - current.x) * ratio,
+          y: centerY - (centerY - current.y) * ratio,
+        })
+      })
+    }
+
+    svg.addEventListener('wheel', handleWheel, { passive: false })
+    return () => svg.removeEventListener('wheel', handleWheel)
+  }, [])
 
   const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (event.button !== 0 || transform.scale === 1) return
-    event.currentTarget.setPointerCapture(event.pointerId)
     dragRef.current = {
       pointerId: event.pointerId,
       clientX: event.clientX,
       clientY: event.clientY,
       x: transform.x,
       y: transform.y,
+      moved: false,
     }
-    setIsDragging(true)
   }
 
   const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
@@ -91,7 +108,13 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
     const bounds = event.currentTarget.getBoundingClientRect()
     const dx = (event.clientX - drag.clientX) * MAP_WIDTH / bounds.width
     const dy = (event.clientY - drag.clientY) * MAP_HEIGHT / bounds.height
-    if (Math.abs(dx) + Math.abs(dy) > 3) suppressClickUntil.current = performance.now() + 250
+    if (!drag.moved && Math.abs(dx) + Math.abs(dy) <= 3) return
+    if (!drag.moved) {
+      drag.moved = true
+      event.currentTarget.setPointerCapture(event.pointerId)
+      setIsDragging(true)
+    }
+    suppressClickUntil.current = performance.now() + 250
     setTransform((current) => clampTransform({
       scale: current.scale,
       x: drag.x + dx,
@@ -101,8 +124,10 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
 
   const finishDrag = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (dragRef.current?.pointerId !== event.pointerId) return
+    const dragged = dragRef.current.moved
     dragRef.current = null
     setIsDragging(false)
+    if (dragged) suppressClickUntil.current = performance.now() + 250
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
@@ -120,11 +145,11 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
 
       <div className="map-frame">
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
           role="img"
           aria-label={`Mapa interativo de países, zoom em ${Math.round(transform.scale * 100)}%`}
           className={`map-viewport ${transform.scale > 1 ? 'is-zoomed' : ''} ${isDragging ? 'is-dragging' : ''}`}
-          onWheel={handleWheel}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={finishDrag}
@@ -149,12 +174,12 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect }: World
                   aria-disabled={!isAvailable}
                   onClick={(event) => {
                     if (performance.now() < suppressClickUntil.current) return
-                    if (isAvailable) onSelect(code, event.ctrlKey || event.metaKey)
+                    if (isAvailable) onSelect(code, isSelected || event.ctrlKey || event.metaKey)
                   }}
                   onKeyDown={(event) => {
                     if (isAvailable && (event.key === 'Enter' || event.key === ' ')) {
                       event.preventDefault()
-                      onSelect(code, event.ctrlKey || event.metaKey)
+                      onSelect(code, isSelected || event.ctrlKey || event.metaKey)
                     }
                   }}
                 >
