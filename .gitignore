@@ -13,6 +13,7 @@ dist-ssr
 .cache
 .npm-cache
 .tmp
+.local-tools
 *.local
 *.stderr
 
