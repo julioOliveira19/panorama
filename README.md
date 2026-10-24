@@ -1,10 +1,14 @@
 # Panorama
 
-Comparador histórico de países para crescimento real anual do PIB, dívida pública bruta, PIB per capita e consumo das famílias per capita. Crescimento e dívida podem ser vistos separadamente ou juntos; os indicadores per capita usam PPC em dólares internacionais constantes de 2021. O mapa permite zoom e arraste, e a interface oferece temas claro e escuro em português do Brasil, inglês e espanhol. A aplicação usa dados do Fundo Monetário Internacional e do Banco Mundial, mantém lacunas como ausências e distingue projeções recentes.
+Comparador histórico de países para crescimento real anual do PIB, dívida pública bruta, PIB per capita e consumo das famílias per capita. Crescimento e dívida podem ser vistos separadamente ou juntos; os indicadores per capita usam PPC em dólares internacionais constantes de 2021. O mapa permite zoom, arraste e leitura temática do indicador no ano final selecionado. A interface oferece temas claro e escuro em português do Brasil, inglês e espanhol. A aplicação usa dados do Fundo Monetário Internacional e do Banco Mundial, mantém lacunas como ausências e distingue projeções recentes.
 
 A nota abaixo do gráfico resume as fontes e os intervalos presentes na seleção atual. A origem exata de cada observação também aparece ao passar o cursor sobre a série.
 
 O idioma pode ser alterado no canto superior direito. A preferência fica salva no navegador e também localiza nomes de países, números, datas, gráficos, tabelas e o CSV exportado.
+
+A seleção atual é reproduzida na URL com os parâmetros `countries`, `indicator`, `from`, `to` e `lang`. O botão **Copiar link** permite compartilhar diretamente países ou agregados, indicador, período e idioma. Atalhos oferecem comparações e períodos frequentes sem remover a possibilidade de seleção manual.
+
+A busca separa países e territórios de regiões e grupos econômicos. No modo **PIB + dívida**, o seletor do mapa define qual dos dois indicadores controla a escala de cores.
 
 ## Executar no Windows
 
@@ -57,6 +61,8 @@ npm.cmd run check
 ```
 
 Esse comando executa lint, testes automatizados e o build de produção.
+
+Os arquivos públicos também incluem favicon, manifesto, metadados Open Graph/Twitter, `robots.txt`, `sitemap.xml` e uma imagem social para compartilhamento.
 
 ## GitHub Pages
 

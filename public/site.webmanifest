@@ -1,0 +1,17 @@
+{
+  "name": "Panorama — Comparador de países",
+  "short_name": "Panorama",
+  "description": "Comparador histórico de indicadores econômicos entre países.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f2",
+  "theme_color": "#17332a",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

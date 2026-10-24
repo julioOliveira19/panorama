@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import './panorama.css'
 import { ChartSourceNote } from './components/ChartSourceNote'
+import { ComparisonPresets } from './components/ComparisonPresets'
 import { CountrySelector } from './components/CountrySelector'
 import { DataTable } from './components/DataTable'
 import { SummaryCards } from './components/SummaryCards'
@@ -11,21 +12,24 @@ import { buildCsv, downloadCsv } from './lib/exportCsv'
 import { formatDate } from './lib/format'
 import { getInitialLanguage, localizedCountryName, saveLanguage, translate } from './lib/i18n'
 import { getInitialTheme, saveTheme } from './lib/theme'
+import { comparisonSearch, comparisonUrl, parseComparisonUrl } from './lib/urlState'
 import type { ComparisonMode, Language, PanoramaData, Theme, WorldMapData } from './types'
 
 type LoadedState = { data: PanoramaData; map: WorldMapData }
 const initialCountries = ['BRA', 'PER']
 
 function PanoramaApp() {
+  const initialUrlState = useMemo(() => parseComparisonUrl(window.location.search), [])
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
-  const [language, setLanguage] = useState<Language>(getInitialLanguage)
+  const [language, setLanguage] = useState<Language>(() => initialUrlState.language ?? getInitialLanguage())
   const [loaded, setLoaded] = useState<LoadedState | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [mode, setMode] = useState<ComparisonMode>('growth')
-  const [selectedCodes, setSelectedCodes] = useState(initialCountries)
-  const [startYear, setStartYear] = useState(2000)
-  const [endYear, setEndYear] = useState(2014)
+  const [mode, setMode] = useState<ComparisonMode>(() => initialUrlState.mode ?? 'growth')
+  const [selectedCodes, setSelectedCodes] = useState(() => initialUrlState.countries ?? initialCountries)
+  const [startYear, setStartYear] = useState(() => initialUrlState.startYear ?? 2000)
+  const [endYear, setEndYear] = useState(() => initialUrlState.endYear ?? 2014)
   const [showNotice, setShowNotice] = useState(false)
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
 
   useEffect(() => {
     saveTheme(theme)
@@ -36,8 +40,17 @@ function PanoramaApp() {
   }, [language])
 
   useEffect(() => {
+    const search = comparisonSearch({ countries: selectedCodes, mode, startYear, endYear, language })
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
+  }, [endYear, language, mode, selectedCodes, startYear])
+
+  useEffect(() => {
     loadPanorama()
-      .then(setLoaded)
+      .then((result) => {
+        setLoaded(result)
+        const validCodes = new Set(result.data.countries.map(({ code }) => code))
+        setSelectedCodes((current) => current.filter((code) => validCodes.has(code)).slice(0, 5))
+      })
       .catch((reason: unknown) => {
         setError(reason instanceof Error ? reason.message : 'Falha desconhecida ao carregar os dados.')
       })
@@ -102,9 +115,30 @@ function PanoramaApp() {
   }
 
   const toggleCountry = (code: string) => changeSelection(code, true)
+  const applyCountryPreset = (codes: string[]) => {
+    setShowNotice(false)
+    setSelectedCodes(codes.slice(0, 5))
+  }
+  const applyPeriodPreset = (from: number, to: number) => {
+    setStartYear(from)
+    setEndYear(to)
+  }
   const exportSelection = () => {
     const csv = buildCsv(mode, selectedCountries, data.series, startYear, endYear, language)
     downloadCsv(csv, `panorama-${mode}-${startYear}-${endYear}.csv`)
+  }
+  const shareSelection = async () => {
+    const url = comparisonUrl(
+      { countries: selectedCodes, mode, startYear, endYear, language },
+      window.location,
+    )
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareStatus('copied')
+    } catch {
+      setShareStatus('error')
+    }
+    window.setTimeout(() => setShareStatus('idle'), 2200)
   }
 
   return (
@@ -203,17 +237,38 @@ function PanoramaApp() {
             </div>
           </div>
 
-          <button className="export-button" type="button" onClick={exportSelection} disabled={!selectedCountries.length}>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 15v4h14v-4" /></svg>
-            {translate(language, 'controls.export')}
-          </button>
+          <div className="control-actions">
+            <button className="share-button" type="button" onClick={shareSelection}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.1 1.1M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.1-1.1" /></svg>
+              {translate(
+                language,
+                shareStatus === 'copied'
+                  ? 'controls.shareCopied'
+                  : shareStatus === 'error'
+                    ? 'controls.shareError'
+                    : 'controls.share',
+              )}
+            </button>
+            <button className="export-button" type="button" onClick={exportSelection} disabled={!selectedCountries.length}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 15v4h14v-4" /></svg>
+              {translate(language, 'controls.export')}
+            </button>
+          </div>
         </section>
 
+        <ComparisonPresets
+          language={language}
+          selectedCodes={selectedCodes}
+          startYear={startYear}
+          endYear={endYear}
+          onCountries={applyCountryPreset}
+          onPeriod={applyPeriodPreset}
+        />
         <CountrySelector countries={localizedCountries} selectedCodes={selectedCodes} onToggle={toggleCountry} onRemove={toggleCountry} language={language} />
         {showNotice && <p className="notice" role="status">{translate(language, 'notice.maxCountries')}</p>}
 
         <div className="visual-grid">
-          <WorldMap map={map} availableCodes={availableCodes} selectedCodes={selectedCodes} onSelect={changeSelection} language={language} />
+          <WorldMap map={map} availableCodes={availableCodes} selectedCodes={selectedCodes} onSelect={changeSelection} mode={mode} series={data.series} year={endYear} language={language} />
           <TimeSeriesChart countries={selectedCountries} mode={mode} series={data.series} startYear={startYear} endYear={endYear} theme={theme} language={language} />
           <ChartSourceNote countries={selectedCountries} mode={mode} series={data.series} startYear={startYear} endYear={endYear} language={language} />
         </div>

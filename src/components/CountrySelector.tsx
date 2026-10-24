@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { isAggregateCode } from '../lib/entities'
 import { translate } from '../lib/i18n'
 import type { Country, Language } from '../types'
 import { countryColors } from '../types'
@@ -28,8 +29,18 @@ export function CountrySelector({
     const term = normalize(query.trim())
     return countries
       .filter(({ code, name }) => !term || normalize(`${name} ${code}`).includes(term))
-      .slice(0, 10)
+      .slice(0, 12)
   }, [countries, query])
+  const resultGroups = [
+    {
+      key: 'countries.countriesAndTerritories' as const,
+      items: results.filter(({ code }) => !isAggregateCode(code)),
+    },
+    {
+      key: 'countries.aggregates' as const,
+      items: results.filter(({ code }) => isAggregateCode(code)),
+    },
+  ].filter(({ items }) => items.length > 0)
 
   return (
     <div className="country-picker">
@@ -66,27 +77,32 @@ export function CountrySelector({
 
       {query && (
         <div className="country-results" role="listbox" aria-label={translate(language, 'countries.searchResults')}>
-          {results.map((country) => {
-            const isSelected = selectedCodes.includes(country.code)
-            const isDisabled = !isSelected && selectedCodes.length >= 5
-            return (
-              <button
-                key={country.code}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                disabled={isDisabled}
-                onClick={() => {
-                  onToggle(country.code)
-                  setQuery('')
-                }}
-              >
-                <span>{country.name}</span>
-                <small>{country.code}</small>
-                <strong>{translate(language, isSelected ? 'countries.selectedStatus' : 'countries.add')}</strong>
-              </button>
-            )
-          })}
+          {resultGroups.map((group) => (
+            <div className="country-result-group" role="group" aria-label={translate(language, group.key)} key={group.key}>
+              <p className="country-result-heading">{translate(language, group.key)}</p>
+              {group.items.map((country) => {
+                const isSelected = selectedCodes.includes(country.code)
+                const isDisabled = !isSelected && selectedCodes.length >= 5
+                return (
+                  <button
+                    key={country.code}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    disabled={isDisabled}
+                    onClick={() => {
+                      onToggle(country.code)
+                      setQuery('')
+                    }}
+                  >
+                    <span>{country.name}</span>
+                    <small>{country.code}</small>
+                    <strong>{translate(language, isSelected ? 'countries.selectedStatus' : 'countries.add')}</strong>
+                  </button>
+                )
+              })}
+            </div>
+          ))}
           {results.length === 0 && <p>{translate(language, 'countries.none')}</p>}
         </div>
       )}

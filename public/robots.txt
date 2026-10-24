@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://juliooliveira19.github.io/panorama/sitemap.xml

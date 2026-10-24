@@ -1,8 +1,10 @@
 import { geoNaturalEarth1, geoPath } from 'd3-geo'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
+import { formatPerCapita, formatValue, statusLabel } from '../lib/format'
 import { localizedCountryName, translate } from '../lib/i18n'
-import type { Language, WorldMapData } from '../types'
+import { buildMapColorScale } from '../lib/mapScale'
+import type { ComparisonMode, IndicatorKey, Language, PanoramaData, WorldMapData } from '../types'
 import { countryColors } from '../types'
 
 const MAP_WIDTH = 920
@@ -30,13 +32,17 @@ type WorldMapProps = {
   availableCodes: Set<string>
   selectedCodes: string[]
   onSelect: (code: string, additive: boolean) => void
+  mode: ComparisonMode
+  series: PanoramaData['series']
+  year: number
   language: Language
 }
 
-export function WorldMap({ map, availableCodes, selectedCodes, onSelect, language }: WorldMapProps) {
+export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, series, year, language }: WorldMapProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [transform, setTransform] = useState<MapTransform>({ scale: 1, x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
+  const [bothLayer, setBothLayer] = useState<IndicatorKey>('growth')
   const dragRef = useRef<{
     pointerId: number
     clientX: number
@@ -54,6 +60,38 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, languag
       path: path(feature) ?? '',
     }))
   }, [map])
+  const mapIndicator: IndicatorKey = mode === 'both' ? bothLayer : mode
+  const mapPoints = useMemo(() => {
+    const points = new Map<string, PanoramaData['series'][IndicatorKey][string][number]>()
+    for (const feature of map.features) {
+      const code = feature.properties.code
+      const point = (series[mapIndicator][code] ?? []).find((item) => item.year === year)
+      if (point) points.set(code, point)
+    }
+    return points
+  }, [map.features, mapIndicator, series, year])
+  const colorScale = useMemo(
+    () => buildMapColorScale([...mapPoints.values()].map(({ value }) => value), mapIndicator),
+    [mapIndicator, mapPoints],
+  )
+  const indicatorLabel = translate(
+    language,
+    mapIndicator === 'growth'
+      ? 'controls.growth'
+      : mapIndicator === 'debt'
+        ? 'controls.debt'
+        : mapIndicator === 'gdpPerCapita'
+          ? 'controls.gdpPerCapita'
+          : 'controls.consumptionPerCapita',
+  )
+  const formatMapValue = (value: number) => mapIndicator === 'gdpPerCapita' || mapIndicator === 'consumptionPerCapita'
+    ? formatPerCapita(value, language)
+    : formatValue(value, language)
+  const mapUnit = mapIndicator === 'growth'
+    ? '%'
+    : mapIndicator === 'debt'
+      ? translate(language, 'unit.debt')
+      : translate(language, 'unit.perCapita')
 
   const zoomBy = (factor: number, centerX = MAP_WIDTH / 2, centerY = MAP_HEIGHT / 2) => {
     setTransform((current) => {
@@ -142,7 +180,19 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, languag
           <p className="eyebrow">{translate(language, 'map.eyebrow')}</p>
           <h2 id="map-title">{translate(language, 'map.title')}</h2>
         </div>
-        <p className="panel-help">{translate(language, 'map.help')}</p>
+        <div className="map-heading-side">
+          <p className="panel-help">{translate(language, 'map.help')}</p>
+          {mode === 'both' && (
+            <div className="map-layer-switch" aria-label={translate(language, 'map.layerLabel')}>
+              <button type="button" aria-pressed={bothLayer === 'growth'} onClick={() => setBothLayer('growth')}>
+                {translate(language, 'chart.gdp')}
+              </button>
+              <button type="button" aria-pressed={bothLayer === 'debt'} onClick={() => setBothLayer('debt')}>
+                {translate(language, 'chart.debt')}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="map-frame">
@@ -165,12 +215,26 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, languag
               const isSelected = selectedIndex >= 0
               const isAvailable = availableCodes.has(code)
               const countryName = localizedCountryName(language, code, feature.properties.name)
+              const point = mapPoints.get(code)
+              const pointTitle = point
+                ? translate(language, 'map.value', {
+                    country: countryName,
+                    value: `${formatMapValue(point.value)} ${mapUnit}`,
+                    year: point.year,
+                    source: point.source,
+                    status: statusLabel(point.status, language),
+                  })
+                : countryName
               return (
                 <path
                   key={code}
                   d={path}
-                  className={`map-country ${isAvailable ? 'is-available' : ''} ${isSelected ? 'is-selected' : ''}`}
-                  style={isSelected ? { fill: countryColors[selectedIndex] } : undefined}
+                  className={`map-country ${isAvailable ? 'is-available' : ''} ${point ? 'has-value' : ''} ${isSelected ? 'is-selected' : ''}`}
+                  style={{
+                    fill: point ? colorScale.color(point.value) : undefined,
+                    stroke: isSelected ? countryColors[selectedIndex] : undefined,
+                    strokeWidth: isSelected ? 2.6 : undefined,
+                  }}
                   role={isAvailable ? 'button' : undefined}
                   tabIndex={isAvailable ? 0 : -1}
                   aria-label={`${countryName}${isSelected ? translate(language, 'map.selectedSuffix') : ''}`}
@@ -186,12 +250,28 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, languag
                     }
                   }}
                 >
-                  <title>{countryName}</title>
+                  <title>{pointTitle}</title>
                 </path>
               )
             })}
           </g>
         </svg>
+        {mapPoints.size > 0 ? (
+          <div className="map-data-legend" aria-label={translate(language, 'map.legendAria', { indicator: indicatorLabel, year })}>
+            <strong>{translate(language, 'map.dataFor', { indicator: indicatorLabel, year })}</strong>
+            <span
+              className="map-gradient"
+              style={{ background: `linear-gradient(90deg, ${colorScale.color(colorScale.min)}, ${colorScale.color(colorScale.midpoint)}, ${colorScale.color(colorScale.max)})` }}
+            />
+            <span className="map-legend-values">
+              <span>{formatMapValue(colorScale.min)}</span>
+              <span>{formatMapValue(colorScale.midpoint)}</span>
+              <span>{formatMapValue(colorScale.max)}</span>
+            </span>
+          </div>
+        ) : (
+          <p className="map-data-empty">{translate(language, 'map.noDataForYear', { year })}</p>
+        )}
         <div className="map-controls" aria-label={translate(language, 'map.zoomControls')}>
           <button type="button" onClick={() => zoomBy(1.5)} disabled={transform.scale >= MAX_ZOOM} aria-label={translate(language, 'map.zoomIn')}>+</button>
           <button type="button" onClick={() => zoomBy(1 / 1.5)} disabled={transform.scale <= 1} aria-label={translate(language, 'map.zoomOut')}>−</button>

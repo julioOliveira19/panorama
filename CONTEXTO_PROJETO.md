@@ -15,10 +15,12 @@ Indicadores:
 
 Recursos:
 
-- Mapa-múndi interativo com zoom e arraste.
-- Seleção de até cinco países.
+- Mapa-múndi interativo com zoom, arraste e escala temática no ano final selecionado.
+- Seleção de até cinco países, territórios ou agregados econômicos.
 - Clique simples seleciona ou desmarca o país; Ctrl+clique adiciona ou remove.
-- Busca de países para acessibilidade e celular.
+- Busca separada entre países/territórios e regiões/grupos econômicos.
+- URL compartilhável com seleção, indicador, período e idioma.
+- Presets de comparações e períodos frequentes.
 - Período configurável sem apagar a seleção.
 - Gráfico anual, tabela, resumos e exportação CSV.
 - Visualização separada ou simultânea dos dois indicadores, com eixos adequados às unidades.
@@ -26,6 +28,7 @@ Recursos:
 - Interface em português do Brasil, inglês e espanhol, com preferência salva no navegador.
 - Fonte, edição e estado de observação, estimativa ou projeção.
 - Ausência de dados exibida como ausência, nunca zero.
+- Metadados de busca e compartilhamento, favicon, manifesto, sitemap e robots.
 
 ## Fontes
 
@@ -53,6 +56,8 @@ Abaixo do gráfico, fora do cartão principal, a interface exibe uma nota dinâm
 - Brasil e Peru podem ser comparados em 2000–2014.
 - Japão possui visualização histórica em 1955–1964, incluindo lacunas quando existirem.
 - Trocar indicador ou período mantém os países.
+- Abrir uma URL compartilhada restaura entidades, indicador, período e idioma válidos.
+- O mapa usa somente valores existentes no ano escolhido; lacunas permanecem sem cor temática.
 - CSV, fontes, unidades e estados dos dados aparecem corretamente.
 - Brasil e Peru possuem PIB e consumo per capita desde 1990; lacunas de outros países permanecem visíveis.
 - `npm run check` passa antes da entrega.
