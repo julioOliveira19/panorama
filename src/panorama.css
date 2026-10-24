@@ -79,7 +79,14 @@
 .panel-heading h2, .section-heading h2, .methodology h2 { margin: 0; font-family: Georgia, serif; font-size: 27px; font-weight: 400; letter-spacing: -.025em; }
 .panel-heading .eyebrow, .section-heading .eyebrow, .methodology .eyebrow { margin-bottom: 6px; }
 .panel-help, .section-heading > p { max-width: 310px; margin: 2px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; text-align: right; }
-.map-heading-side { display: grid; justify-items: end; gap: 9px; }
+.map-heading-side { display: flex; flex: 1; align-items: flex-start; justify-content: flex-end; gap: 12px; }
+.map-heading-side .panel-help { max-width: 260px; }
+.map-heading-actions { display: flex; flex: none; align-items: center; justify-content: flex-end; gap: 7px; flex-wrap: wrap; }
+.map-multi-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; color: var(--muted); background: var(--soft); border: 1px solid transparent; border-radius: 9px; cursor: pointer; font-size: 10px; font-weight: 800; }
+.map-multi-toggle span { display: grid; place-items: center; width: 13px; height: 13px; color: transparent; border: 1px solid var(--muted); border-radius: 4px; font-size: 9px; }
+.map-multi-toggle:hover { color: var(--ink); border-color: var(--line); }
+.map-multi-toggle[aria-pressed="true"] { color: var(--inverse-text); background: var(--inverse-bg); }
+.map-multi-toggle[aria-pressed="true"] span { color: var(--inverse-text); border-color: currentColor; }
 .map-layer-switch { display: inline-flex; padding: 3px; background: var(--soft); border-radius: 9px; }
 .map-layer-switch button { padding: 6px 9px; color: var(--muted); background: transparent; border: 0; border-radius: 7px; cursor: pointer; font-size: 10px; font-weight: 800; }
 .map-layer-switch button[aria-pressed="true"] { color: var(--inverse-text); background: var(--inverse-bg); }
@@ -223,7 +230,8 @@ footer p { margin: 0; }
   .country-results { top: auto; right: 0; bottom: -250px; }
   .panel-heading, .section-heading { display: grid; }
   .panel-help, .section-heading > p { text-align: left; }
-  .map-heading-side { justify-items: start; }
+  .map-heading-side { display: grid; justify-items: start; }
+  .map-heading-actions { justify-content: flex-start; }
   .chart-source-note { margin-inline: 8px; }
   .map-frame { padding-inline: 7px; }
   .chart-country-legend { padding-inline: 20px; }

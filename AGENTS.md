@@ -21,7 +21,7 @@
 ## Experiência
 
 - Mapa claro e seleção evidente, sem limite rígido de países ou grupos.
-- Clique simples substitui a seleção; Ctrl+clique adiciona ou remove.
+- Clique simples substitui a seleção; Ctrl+clique ou o modo "Selecionar múltiplos" adiciona ou remove.
 - A busca de países é a alternativa acessível e móvel.
 - Trocar indicador ou período preserva os países.
 - Gráfico, tabela, resumo, fontes e CSV são obrigatórios.

@@ -9,7 +9,7 @@ import type { ComparisonMode, IndicatorKey, Language, PanoramaData, WorldMapData
 import { countryColor } from '../types'
 
 const MAP_WIDTH = 920
-const MAP_HEIGHT = 460
+const MAP_HEIGHT = 490
 const MAX_ZOOM = 6
 
 type MapTransform = {
@@ -45,6 +45,7 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
   const transformRef = useRef(transform)
   const [isDragging, setIsDragging] = useState(false)
   const [bothLayer, setBothLayer] = useState<IndicatorKey>('growth')
+  const [multiSelect, setMultiSelect] = useState(false)
   const dragRef = useRef<{
     pointerId: number
     clientX: number
@@ -61,7 +62,7 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
   } | null>(null)
   const suppressClickUntil = useRef(0)
   const paths = useMemo(() => {
-    const projection = geoNaturalEarth1().fitExtent([[12, 12], [908, 448]], map)
+    const projection = geoNaturalEarth1().fitExtent([[12, 12], [MAP_WIDTH - 12, MAP_HEIGHT - 12]], map)
     const path = geoPath(projection)
     return map.features.map((feature) => ({
       feature,
@@ -300,16 +301,27 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
         </div>
         <div className="map-heading-side">
           <p className="panel-help">{translate(language, 'map.help')}</p>
-          {mode === 'both' && (
-            <div className="map-layer-switch" aria-label={translate(language, 'map.layerLabel')}>
-              <button type="button" aria-pressed={bothLayer === 'growth'} onClick={() => setBothLayer('growth')}>
-                {translate(language, 'chart.gdp')}
-              </button>
-              <button type="button" aria-pressed={bothLayer === 'debt'} onClick={() => setBothLayer('debt')}>
-                {translate(language, 'chart.debt')}
-              </button>
-            </div>
-          )}
+          <div className="map-heading-actions">
+            <button
+              className="map-multi-toggle"
+              type="button"
+              aria-pressed={multiSelect}
+              onClick={() => setMultiSelect((current) => !current)}
+            >
+              <span aria-hidden="true">✓</span>
+              {translate(language, 'map.multiSelect')}
+            </button>
+            {mode === 'both' && (
+              <div className="map-layer-switch" aria-label={translate(language, 'map.layerLabel')}>
+                <button type="button" aria-pressed={bothLayer === 'growth'} onClick={() => setBothLayer('growth')}>
+                  {translate(language, 'chart.gdp')}
+                </button>
+                <button type="button" aria-pressed={bothLayer === 'debt'} onClick={() => setBothLayer('debt')}>
+                  {translate(language, 'chart.debt')}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -325,7 +337,7 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
           onPointerUp={finishDrag}
           onPointerCancel={finishDrag}
         >
-          <rect width="920" height="460" rx="18" className="map-ocean" />
+          <rect width={MAP_WIDTH} height={MAP_HEIGHT} rx="18" className="map-ocean" />
           <g transform={`translate(${transform.x} ${transform.y}) scale(${transform.scale})`}>
             {paths.map(({ feature, path }) => {
               const code = feature.properties.code
@@ -359,12 +371,12 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
                   aria-disabled={!isAvailable}
                   onClick={(event) => {
                     if (performance.now() < suppressClickUntil.current) return
-                    if (isAvailable) onSelect(code, isSelected || event.ctrlKey || event.metaKey)
+                    if (isAvailable) onSelect(code, isSelected || multiSelect || event.ctrlKey || event.metaKey)
                   }}
                   onKeyDown={(event) => {
                     if (isAvailable && (event.key === 'Enter' || event.key === ' ')) {
                       event.preventDefault()
-                      onSelect(code, isSelected || event.ctrlKey || event.metaKey)
+                      onSelect(code, isSelected || multiSelect || event.ctrlKey || event.metaKey)
                     }
                   }}
                 >

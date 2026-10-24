@@ -10,7 +10,7 @@ A seleção atual é reproduzida na URL com os parâmetros `countries`, `indicat
 
 A busca separa países e territórios de regiões e grupos econômicos. No modo **PIB + dívida**, o seletor do mapa define qual dos dois indicadores controla a escala de cores.
 
-Na legenda do gráfico, clicar no nome de um país mantém sua série destacada e suaviza as demais. Clicar novamente remove o destaque.
+Na legenda do gráfico, clicar no nome de um país mantém sua série destacada e suaviza as demais. `Ctrl+clique` combina vários destaques; clicar novamente remove o destaque. No mapa, o botão **Selecionar múltiplos** oferece uma alternativa ao uso da tecla Ctrl.
 
 ## Executar no Windows
 

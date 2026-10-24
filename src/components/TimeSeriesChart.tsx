@@ -6,6 +6,7 @@ import { SVGRenderer } from 'echarts/renderers'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { formatPerCapita, formatValue, statusLabel } from '../lib/format'
 import { yearsInRange } from '../lib/calculations'
+import { nextFocusedCodes } from '../lib/chartFocus'
 import { translate } from '../lib/i18n'
 import type { ComparisonMode, Country, IndicatorKey, Language, PanoramaData, Theme } from '../types'
 import { countryColor, debtColor } from '../types'
@@ -53,15 +54,17 @@ export function TimeSeriesChart({
   language,
 }: TimeSeriesChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
-  const [focusedCode, setFocusedCode] = useState<string | null>(null)
+  const [focusedCodes, setFocusedCodes] = useState<string[]>([])
   const years = useMemo(() => yearsInRange(startYear, endYear), [startYear, endYear])
   const activeIndicators = useMemo<IndicatorKey[]>(
     () => mode === 'both' ? ['growth', 'debt'] : [mode],
     [mode],
   )
-  const activeFocusedCode = focusedCode && countries.some(({ code }) => code === focusedCode)
-    ? focusedCode
-    : null
+  const activeFocusedCodes = useMemo(
+    () => new Set(focusedCodes.filter((code) => countries.some((country) => country.code === code))),
+    [countries, focusedCodes],
+  )
+  const hasFocusedCountries = activeFocusedCodes.size > 0
 
   useEffect(() => {
     if (!chartRef.current) return
@@ -115,7 +118,7 @@ export function TimeSeriesChart({
           ? `${country.name} · ${translate(language, indicator === 'growth' ? 'chart.gdp' : 'chart.debt')}`
           : country.name
         const symbol = indicator === 'growth' ? 'circle' : 'diamond'
-        const isFocused = !activeFocusedCode || activeFocusedCode === country.code
+        const isFocused = !hasFocusedCountries || activeFocusedCodes.has(country.code)
         const opacity = isFocused ? 1 : .14
         const observedWidth = indicator === 'growth' ? 3 : 2
 
@@ -129,9 +132,9 @@ export function TimeSeriesChart({
             showSymbol: years.length <= 30,
             symbol,
             symbolSize: indicator === 'growth' ? 6 : 8,
-            lineStyle: { width: observedWidth + (activeFocusedCode === country.code ? 1 : 0), color, opacity },
+            lineStyle: { width: observedWidth + (activeFocusedCodes.has(country.code) ? 1 : 0), color, opacity },
             itemStyle: { color, opacity },
-            z: activeFocusedCode === country.code ? 3 : 1,
+            z: activeFocusedCodes.has(country.code) ? 3 : 1,
             emphasis: { focus: 'series' as const },
           },
           {
@@ -143,9 +146,9 @@ export function TimeSeriesChart({
             showSymbol: true,
             symbol,
             symbolSize: indicator === 'growth' ? 7 : 9,
-            lineStyle: { width: activeFocusedCode === country.code ? 3 : 2, type: 'dashed' as const, color, opacity },
+            lineStyle: { width: activeFocusedCodes.has(country.code) ? 3 : 2, type: 'dashed' as const, color, opacity },
             itemStyle: { color, opacity, borderColor: '#fffefa', borderWidth: 2 },
-            z: activeFocusedCode === country.code ? 3 : 1,
+            z: activeFocusedCodes.has(country.code) ? 3 : 1,
             emphasis: { focus: 'series' as const },
           },
         ]
@@ -237,7 +240,7 @@ export function TimeSeriesChart({
       observer.disconnect()
       chart.dispose()
     }
-  }, [activeFocusedCode, activeIndicators, countries, endYear, language, mode, series, startYear, theme, years])
+  }, [activeFocusedCodes, activeIndicators, countries, endYear, hasFocusedCountries, language, mode, series, startYear, theme, years])
 
   const title = translate(
     language,
@@ -272,15 +275,20 @@ export function TimeSeriesChart({
       </div>
       <div className="chart-country-legend" aria-label={translate(language, 'chart.countryLegend')}>
         {countries.map((country, index) => {
-          const isActive = activeFocusedCode === country.code
+          const isActive = activeFocusedCodes.has(country.code)
           return (
             <button
               key={country.code}
               type="button"
-              className={`${isActive ? 'is-active' : ''} ${activeFocusedCode && !isActive ? 'is-muted' : ''}`}
+              className={`${isActive ? 'is-active' : ''} ${hasFocusedCountries && !isActive ? 'is-muted' : ''}`}
               aria-pressed={isActive}
               title={translate(language, isActive ? 'chart.clearHighlight' : 'chart.highlightCountry', { country: country.name })}
-              onClick={() => setFocusedCode((current) => current === country.code ? null : country.code)}
+              onClick={(event) => setFocusedCodes((current) => nextFocusedCodes(
+                current,
+                country.code,
+                new Set(countries.map(({ code }) => code)),
+                event.ctrlKey || event.metaKey,
+              ))}
             >
               <i style={{ '--country-color': countryColor(index) } as React.CSSProperties} />
               <span>{country.name}</span>
