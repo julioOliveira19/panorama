@@ -1,16 +1,16 @@
 import { LineChart } from 'echarts/charts'
-import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
+import { GridComponent, TooltipComponent } from 'echarts/components'
 import { init, use as registerECharts } from 'echarts/core'
 import type { EChartsOption } from 'echarts'
 import { SVGRenderer } from 'echarts/renderers'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { formatPerCapita, formatValue, statusLabel } from '../lib/format'
 import { yearsInRange } from '../lib/calculations'
 import { translate } from '../lib/i18n'
 import type { ComparisonMode, Country, IndicatorKey, Language, PanoramaData, Theme } from '../types'
-import { countryColor, countryColors, debtColor } from '../types'
+import { countryColor, debtColor } from '../types'
 
-registerECharts([LineChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer])
+registerECharts([LineChart, GridComponent, TooltipComponent, SVGRenderer])
 
 type TimeSeriesChartProps = {
   countries: Country[]
@@ -53,18 +53,22 @@ export function TimeSeriesChart({
   language,
 }: TimeSeriesChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
+  const [focusedCode, setFocusedCode] = useState<string | null>(null)
   const years = useMemo(() => yearsInRange(startYear, endYear), [startYear, endYear])
   const activeIndicators = useMemo<IndicatorKey[]>(
     () => mode === 'both' ? ['growth', 'debt'] : [mode],
     [mode],
   )
+  const activeFocusedCode = focusedCode && countries.some(({ code }) => code === focusedCode)
+    ? focusedCode
+    : null
+
   useEffect(() => {
     if (!chartRef.current) return
     const chart = init(chartRef.current, undefined, { renderer: 'svg' })
     const chartUi = theme === 'dark'
       ? {
           text: '#a4b2ac',
-          textStrong: '#dce7e2',
           axis: '#56635e',
           grid: '#2d3934',
           tooltipBackground: '#e7f0eb',
@@ -72,7 +76,6 @@ export function TimeSeriesChart({
         }
       : {
           text: '#61706b',
-          textStrong: '#34433e',
           axis: '#b8c4bf',
           grid: '#e7ece9',
           tooltipBackground: '#10251f',
@@ -112,6 +115,9 @@ export function TimeSeriesChart({
           ? `${country.name} · ${translate(language, indicator === 'growth' ? 'chart.gdp' : 'chart.debt')}`
           : country.name
         const symbol = indicator === 'growth' ? 'circle' : 'diamond'
+        const isFocused = !activeFocusedCode || activeFocusedCode === country.code
+        const opacity = isFocused ? 1 : .14
+        const observedWidth = indicator === 'growth' ? 3 : 2
 
         return [
           {
@@ -123,8 +129,9 @@ export function TimeSeriesChart({
             showSymbol: years.length <= 30,
             symbol,
             symbolSize: indicator === 'growth' ? 6 : 8,
-            lineStyle: { width: indicator === 'growth' ? 3 : 2, color },
-            itemStyle: { color },
+            lineStyle: { width: observedWidth + (activeFocusedCode === country.code ? 1 : 0), color, opacity },
+            itemStyle: { color, opacity },
+            z: activeFocusedCode === country.code ? 3 : 1,
             emphasis: { focus: 'series' as const },
           },
           {
@@ -136,8 +143,9 @@ export function TimeSeriesChart({
             showSymbol: true,
             symbol,
             symbolSize: indicator === 'growth' ? 7 : 9,
-            lineStyle: { width: 2, type: 'dashed' as const, color },
-            itemStyle: { color, borderColor: '#fffefa', borderWidth: 2 },
+            lineStyle: { width: activeFocusedCode === country.code ? 3 : 2, type: 'dashed' as const, color, opacity },
+            itemStyle: { color, opacity, borderColor: '#fffefa', borderWidth: 2 },
+            z: activeFocusedCode === country.code ? 3 : 1,
             emphasis: { focus: 'series' as const },
           },
         ]
@@ -146,13 +154,7 @@ export function TimeSeriesChart({
 
     const option: EChartsOption = {
       animationDuration: 500,
-      color: countryColors,
-      grid: { top: 72, right: mode === 'both' ? 72 : 22, bottom: 56, left: 64, containLabel: false },
-      legend: {
-        top: 10,
-        type: 'scroll',
-        textStyle: { color: chartUi.textStrong, fontFamily: 'system-ui' },
-      },
+      grid: { top: 34, right: mode === 'both' ? 72 : 22, bottom: 56, left: 64, containLabel: false },
       tooltip: {
         trigger: 'axis',
         backgroundColor: chartUi.tooltipBackground,
@@ -235,7 +237,7 @@ export function TimeSeriesChart({
       observer.disconnect()
       chart.dispose()
     }
-  }, [activeIndicators, countries, endYear, language, mode, series, startYear, theme, years])
+  }, [activeFocusedCode, activeIndicators, countries, endYear, language, mode, series, startYear, theme, years])
 
   const title = translate(
     language,
@@ -267,6 +269,24 @@ export function TimeSeriesChart({
             <span className="chart-key"><i className="key-projection" /> {translate(language, 'chart.projection')}</span>
           )}
         </div>
+      </div>
+      <div className="chart-country-legend" aria-label={translate(language, 'chart.countryLegend')}>
+        {countries.map((country, index) => {
+          const isActive = activeFocusedCode === country.code
+          return (
+            <button
+              key={country.code}
+              type="button"
+              className={`${isActive ? 'is-active' : ''} ${activeFocusedCode && !isActive ? 'is-muted' : ''}`}
+              aria-pressed={isActive}
+              title={translate(language, isActive ? 'chart.clearHighlight' : 'chart.highlightCountry', { country: country.name })}
+              onClick={() => setFocusedCode((current) => current === country.code ? null : country.code)}
+            >
+              <i style={{ '--country-color': countryColor(index) } as React.CSSProperties} />
+              <span>{country.name}</span>
+            </button>
+          )
+        })}
       </div>
       <div ref={chartRef} className="chart" role="img" aria-label={translate(language, 'chart.aria', { title: title.toLowerCase() })} />
     </section>

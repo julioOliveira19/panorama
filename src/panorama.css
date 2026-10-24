@@ -71,7 +71,7 @@
 .country-results strong { color: var(--green); font-size: 12px; }
 .country-results p { margin: 12px; color: var(--muted); }
 
-.visual-grid { display: grid; grid-template-columns: minmax(0, .94fr) minmax(0, 1.06fr); column-gap: 20px; row-gap: 8px; }
+.visual-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); column-gap: 20px; row-gap: 8px; }
 .visual-grid > *, .hero-copy, .control-group { min-width: 0; }
 .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 8px 30px rgba(5,12,9,.09); overflow: hidden; }
 .panel-heading, .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 26px; }
@@ -85,7 +85,7 @@
 .map-layer-switch button[aria-pressed="true"] { color: var(--inverse-text); background: var(--inverse-bg); }
 .map-frame { position: relative; padding: 0 16px 18px; }
 .map-frame svg { display: block; width: 100%; height: auto; }
-.map-viewport { cursor: default; touch-action: pan-y; user-select: none; }
+.map-viewport { cursor: default; touch-action: none; user-select: none; }
 .map-viewport.is-zoomed { cursor: grab; touch-action: none; }
 .map-viewport.is-dragging { cursor: grabbing; }
 .map-controls { position: absolute; right: 28px; bottom: 30px; display: grid; grid-template-columns: 36px 36px auto; gap: 5px; padding: 5px; background: var(--deck); border: 1px solid var(--line); border-radius: 11px; box-shadow: 0 5px 18px rgba(5,12,9,.22); backdrop-filter: blur(10px); }
@@ -113,7 +113,14 @@
 .map-gradient { height: 7px; border-radius: 999px; }
 .map-legend-values { font-size: 8px; font-variant-numeric: tabular-nums; }
 .map-data-empty { max-width: 220px; padding: 8px 10px; font-size: 9px; }
-.chart { width: 100%; height: 425px; }
+.chart-country-legend { display: flex; align-items: center; gap: 15px; padding: 1px 25px 7px; overflow-x: auto; scrollbar-width: thin; }
+.chart-country-legend button { display: inline-flex; flex: none; align-items: center; gap: 7px; padding: 5px 0; color: var(--muted); background: transparent; border: 0; cursor: pointer; font: inherit; font-size: 11px; transition: opacity .15s, color .15s; }
+.chart-country-legend button:hover { color: var(--ink); }
+.chart-country-legend button.is-active { color: var(--ink); font-weight: 850; }
+.chart-country-legend button.is-muted { opacity: .36; }
+.chart-country-legend i { position: relative; display: block; width: 24px; height: 2px; background: var(--country-color); }
+.chart-country-legend i::after { position: absolute; top: 50%; left: 50%; width: 9px; height: 9px; background: var(--country-color); border-radius: 50%; content: ''; transform: translate(-50%, -50%); }
+.chart { width: 100%; height: 390px; }
 .chart-keys { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
 .chart-key { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; white-space: nowrap; }
 .chart-key i { display: inline-block; flex: none; }
@@ -218,7 +225,9 @@ footer p { margin: 0; }
   .panel-help, .section-heading > p { text-align: left; }
   .map-heading-side { justify-items: start; }
   .chart-source-note { margin-inline: 8px; }
-  .chart { height: 370px; }
+  .map-frame { padding-inline: 7px; }
+  .chart-country-legend { padding-inline: 20px; }
+  .chart { height: 335px; }
   .map-controls { right: 22px; bottom: 24px; grid-template-columns: 32px 32px auto; }
   .map-data-legend, .map-data-empty { left: 22px; bottom: 24px; }
   .map-controls button { min-width: 32px; height: 30px; }

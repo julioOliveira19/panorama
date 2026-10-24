@@ -1,6 +1,6 @@
 # Panorama
 
-Comparador histórico de países para crescimento real anual do PIB, dívida pública bruta, PIB per capita e consumo das famílias per capita. Crescimento e dívida podem ser vistos separadamente ou juntos; os indicadores per capita usam PPC em dólares internacionais constantes de 2021. O mapa permite zoom, arraste e leitura temática do indicador no ano final selecionado. A interface oferece temas claro e escuro em português do Brasil, inglês e espanhol. A aplicação usa dados do Fundo Monetário Internacional e do Banco Mundial, mantém lacunas como ausências e distingue projeções recentes.
+Comparador histórico de países para crescimento real anual do PIB, dívida pública bruta, PIB per capita e consumo das famílias per capita. Crescimento e dívida podem ser vistos separadamente ou juntos; os indicadores per capita usam PPC em dólares internacionais constantes de 2021. O mapa permite zoom por roda, botões ou pinça, arraste e leitura temática do indicador no ano final selecionado. A interface oferece temas claro e escuro em português do Brasil, inglês e espanhol. A aplicação usa dados do Fundo Monetário Internacional e do Banco Mundial, mantém lacunas como ausências e distingue projeções recentes.
 
 A nota abaixo do gráfico resume as fontes e os intervalos presentes na seleção atual. A origem exata de cada observação também aparece ao passar o cursor sobre a série.
 
@@ -9,6 +9,8 @@ O idioma pode ser alterado no canto superior direito. A preferência fica salva 
 A seleção atual é reproduzida na URL com os parâmetros `countries`, `indicator`, `from`, `to` e `lang`. O botão **Copiar link** permite compartilhar diretamente países ou agregados, indicador, período e idioma. Não há limite rígido de entidades selecionadas, e dois seletores compactos oferecem comparações e períodos frequentes sem remover a possibilidade de seleção manual.
 
 A busca separa países e territórios de regiões e grupos econômicos. No modo **PIB + dívida**, o seletor do mapa define qual dos dois indicadores controla a escala de cores.
+
+Na legenda do gráfico, clicar no nome de um país mantém sua série destacada e suaviza as demais. Clicar novamente remove o destaque.
 
 ## Executar no Windows
 

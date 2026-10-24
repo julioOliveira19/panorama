@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { formatPerCapita, formatSigned, formatValue, statusLabel } from '../lib/format'
 import { localizedCountryName, translate } from '../lib/i18n'
+import { pinchTransform } from '../lib/mapGesture'
 import { buildMapColorScale } from '../lib/mapScale'
 import type { ComparisonMode, IndicatorKey, Language, PanoramaData, WorldMapData } from '../types'
 import { countryColor } from '../types'
@@ -41,6 +42,7 @@ type WorldMapProps = {
 export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, series, year, language }: WorldMapProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [transform, setTransform] = useState<MapTransform>({ scale: 1, x: 0, y: 0 })
+  const transformRef = useRef(transform)
   const [isDragging, setIsDragging] = useState(false)
   const [bothLayer, setBothLayer] = useState<IndicatorKey>('growth')
   const dragRef = useRef<{
@@ -50,6 +52,12 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
     x: number
     y: number
     moved: boolean
+  } | null>(null)
+  const touchPointsRef = useRef(new Map<number, { clientX: number; clientY: number }>())
+  const pinchRef = useRef<{
+    distance: number
+    midpoint: { x: number; y: number }
+    transform: MapTransform
   } | null>(null)
   const suppressClickUntil = useRef(0)
   const paths = useMemo(() => {
@@ -105,12 +113,38 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
     setTransform((current) => {
       const scale = Math.min(MAX_ZOOM, Math.max(1, current.scale * factor))
       const ratio = scale / current.scale
-      return clampTransform({
+      const next = clampTransform({
         scale,
         x: centerX - (centerX - current.x) * ratio,
         y: centerY - (centerY - current.y) * ratio,
       })
+      transformRef.current = next
+      return next
     })
+  }
+
+  const clientToMapPoint = (svg: SVGSVGElement, clientX: number, clientY: number) => {
+    const bounds = svg.getBoundingClientRect()
+    return {
+      x: (clientX - bounds.left) * MAP_WIDTH / bounds.width,
+      y: (clientY - bounds.top) * MAP_HEIGHT / bounds.height,
+    }
+  }
+
+  const beginPinch = (svg: SVGSVGElement) => {
+    const points = [...touchPointsRef.current.values()]
+    if (points.length < 2) return
+    const [first, second] = points
+    const midpoint = clientToMapPoint(
+      svg,
+      (first.clientX + second.clientX) / 2,
+      (first.clientY + second.clientY) / 2,
+    )
+    pinchRef.current = {
+      distance: Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY),
+      midpoint,
+      transform: transformRef.current,
+    }
   }
 
   useEffect(() => {
@@ -126,11 +160,13 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
       setTransform((current) => {
         const scale = Math.min(MAX_ZOOM, Math.max(1, current.scale * factor))
         const ratio = scale / current.scale
-        return clampTransform({
+        const next = clampTransform({
           scale,
           x: centerX - (centerX - current.x) * ratio,
           y: centerY - (centerY - current.y) * ratio,
         })
+        transformRef.current = next
+        return next
       })
     }
 
@@ -139,18 +175,64 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
   }, [])
 
   const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (event.button !== 0 || transform.scale === 1) return
+    if (event.pointerType === 'touch') {
+      touchPointsRef.current.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY })
+      if (touchPointsRef.current.size >= 2) {
+        dragRef.current = null
+        for (const pointerId of touchPointsRef.current.keys()) {
+          if (!event.currentTarget.hasPointerCapture(pointerId)) event.currentTarget.setPointerCapture(pointerId)
+        }
+        beginPinch(event.currentTarget)
+        setIsDragging(true)
+        suppressClickUntil.current = performance.now() + 300
+        return
+      }
+    }
+
+    const currentTransform = transformRef.current
+    if (event.button !== 0 || currentTransform.scale === 1) return
     dragRef.current = {
       pointerId: event.pointerId,
       clientX: event.clientX,
       clientY: event.clientY,
-      x: transform.x,
-      y: transform.y,
+      x: currentTransform.x,
+      y: currentTransform.y,
       moved: false,
     }
   }
 
   const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (event.pointerType === 'touch' && touchPointsRef.current.has(event.pointerId)) {
+      touchPointsRef.current.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY })
+      if (touchPointsRef.current.size >= 2) {
+        event.preventDefault()
+        if (!pinchRef.current) beginPinch(event.currentTarget)
+        const pinch = pinchRef.current
+        const points = [...touchPointsRef.current.values()]
+        if (!pinch || points.length < 2) return
+        const [first, second] = points
+        const midpoint = clientToMapPoint(
+          event.currentTarget,
+          (first.clientX + second.clientX) / 2,
+          (first.clientY + second.clientY) / 2,
+        )
+        const distance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY)
+        const next = clampTransform(pinchTransform(
+          pinch.transform,
+          pinch.distance,
+          pinch.midpoint,
+          distance,
+          midpoint,
+          1,
+          MAX_ZOOM,
+        ))
+        transformRef.current = next
+        setTransform(next)
+        suppressClickUntil.current = performance.now() + 300
+        return
+      }
+    }
+
     const drag = dragRef.current
     if (!drag || drag.pointerId !== event.pointerId) return
     const bounds = event.currentTarget.getBoundingClientRect()
@@ -163,14 +245,42 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
       setIsDragging(true)
     }
     suppressClickUntil.current = performance.now() + 250
-    setTransform((current) => clampTransform({
-      scale: current.scale,
+    const currentTransform = transformRef.current
+    const next = clampTransform({
+      scale: currentTransform.scale,
       x: drag.x + dx,
       y: drag.y + dy,
-    }))
+    })
+    transformRef.current = next
+    setTransform(next)
   }
 
   const finishDrag = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (event.pointerType === 'touch') {
+      touchPointsRef.current.delete(event.pointerId)
+      pinchRef.current = null
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+      const remaining = [...touchPointsRef.current.entries()]
+      if (remaining.length === 1 && transformRef.current.scale > 1) {
+        const [pointerId, point] = remaining[0]
+        dragRef.current = {
+          pointerId,
+          clientX: point.clientX,
+          clientY: point.clientY,
+          x: transformRef.current.x,
+          y: transformRef.current.y,
+          moved: true,
+        }
+      } else {
+        dragRef.current = null
+        setIsDragging(false)
+      }
+      suppressClickUntil.current = performance.now() + 300
+      return
+    }
+
     if (dragRef.current?.pointerId !== event.pointerId) return
     const dragged = dragRef.current.moved
     dragRef.current = null
@@ -293,7 +403,11 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
           <button
             type="button"
             className="map-reset"
-            onClick={() => setTransform({ scale: 1, x: 0, y: 0 })}
+            onClick={() => {
+              const reset = { scale: 1, x: 0, y: 0 }
+              transformRef.current = reset
+              setTransform(reset)
+            }}
             disabled={transform.scale === 1}
             aria-label={translate(language, 'map.zoomReset')}
           >
