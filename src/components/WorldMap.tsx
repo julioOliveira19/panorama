@@ -1,11 +1,11 @@
 import { geoNaturalEarth1, geoPath } from 'd3-geo'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import { formatPerCapita, formatValue, statusLabel } from '../lib/format'
+import { formatPerCapita, formatSigned, formatValue, statusLabel } from '../lib/format'
 import { localizedCountryName, translate } from '../lib/i18n'
 import { buildMapColorScale } from '../lib/mapScale'
 import type { ComparisonMode, IndicatorKey, Language, PanoramaData, WorldMapData } from '../types'
-import { countryColors } from '../types'
+import { countryColor } from '../types'
 
 const MAP_WIDTH = 920
 const MAP_HEIGHT = 460
@@ -88,10 +88,18 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
     ? formatPerCapita(value, language)
     : formatValue(value, language)
   const mapUnit = mapIndicator === 'growth'
-    ? '%'
+    ? translate(language, 'chart.growthUnit')
     : mapIndicator === 'debt'
       ? translate(language, 'unit.debt')
       : translate(language, 'unit.perCapita')
+  const legendValue = (value: number) => mapIndicator === 'growth'
+    ? `${formatSigned(value, language)}%`
+    : mapIndicator === 'debt'
+      ? `${formatValue(value, language)}%`
+      : formatPerCapita(value, language)
+  const legendLabels = mapIndicator === 'growth'
+    ? ['map.scaleDecline', 'map.scaleStable', 'map.scaleGrowth'] as const
+    : ['map.scaleLower', 'map.scaleMiddle', 'map.scaleHigher'] as const
 
   const zoomBy = (factor: number, centerX = MAP_WIDTH / 2, centerY = MAP_HEIGHT / 2) => {
     setTransform((current) => {
@@ -232,7 +240,7 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
                   className={`map-country ${isAvailable ? 'is-available' : ''} ${point ? 'has-value' : ''} ${isSelected ? 'is-selected' : ''}`}
                   style={{
                     fill: point ? colorScale.color(point.value) : undefined,
-                    stroke: isSelected ? countryColors[selectedIndex] : undefined,
+                    stroke: isSelected ? countryColor(selectedIndex) : undefined,
                     strokeWidth: isSelected ? 2.6 : undefined,
                   }}
                   role={isAvailable ? 'button' : undefined}
@@ -258,15 +266,22 @@ export function WorldMap({ map, availableCodes, selectedCodes, onSelect, mode, s
         </svg>
         {mapPoints.size > 0 ? (
           <div className="map-data-legend" aria-label={translate(language, 'map.legendAria', { indicator: indicatorLabel, year })}>
-            <strong>{translate(language, 'map.dataFor', { indicator: indicatorLabel, year })}</strong>
+            <div className="map-legend-heading">
+              <strong>{indicatorLabel}</strong>
+              <span>{year}</span>
+            </div>
+            <small>{mapUnit}</small>
+            <span className="map-scale-labels" aria-hidden="true">
+              {legendLabels.map((label) => <span key={label}>{translate(language, label)}</span>)}
+            </span>
             <span
               className="map-gradient"
               style={{ background: `linear-gradient(90deg, ${colorScale.color(colorScale.min)}, ${colorScale.color(colorScale.midpoint)}, ${colorScale.color(colorScale.max)})` }}
             />
             <span className="map-legend-values">
-              <span>{formatMapValue(colorScale.min)}</span>
-              <span>{formatMapValue(colorScale.midpoint)}</span>
-              <span>{formatMapValue(colorScale.max)}</span>
+              <span>{legendValue(colorScale.min)}</span>
+              <span>{legendValue(colorScale.midpoint)}</span>
+              <span>{legendValue(colorScale.max)}</span>
             </span>
           </div>
         ) : (

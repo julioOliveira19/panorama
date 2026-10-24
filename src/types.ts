@@ -67,5 +67,23 @@ export type MapProperties = {
 
 export type WorldMapData = GeoJSON.FeatureCollection<GeoJSON.Geometry, MapProperties>
 
-export const countryColors = ['#2463eb', '#d97706', '#0f8a75', '#c24178', '#7557d3']
-export const debtColors = ['#7897e8', '#e5a34a', '#61ad9f', '#d884aa', '#a08bdd']
+export const countryColors = [
+  '#2463eb', '#d97706', '#0f8a75', '#c24178', '#7557d3', '#2f855a',
+  '#dc2626', '#0891b2', '#a16207', '#475569', '#db2777', '#65a30d',
+]
+export const debtColors = [
+  '#7897e8', '#e5a34a', '#61ad9f', '#d884aa', '#a08bdd', '#79aa8a',
+  '#e47b7b', '#70b7c8', '#c5a45b', '#8995a5', '#e583b0', '#9bbb5d',
+]
+
+export function countryColor(index: number) {
+  if (index < countryColors.length) return countryColors[index]
+  const hue = Math.round((index * 137.508) % 360)
+  return `hsl(${hue} 68% 42%)`
+}
+
+export function debtColor(index: number) {
+  if (index < debtColors.length) return debtColors[index]
+  const hue = Math.round((index * 137.508) % 360)
+  return `hsl(${hue} 45% 67%)`
+}

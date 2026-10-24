@@ -28,7 +28,6 @@ function PanoramaApp() {
   const [selectedCodes, setSelectedCodes] = useState(() => initialUrlState.countries ?? initialCountries)
   const [startYear, setStartYear] = useState(() => initialUrlState.startYear ?? 2000)
   const [endYear, setEndYear] = useState(() => initialUrlState.endYear ?? 2014)
-  const [showNotice, setShowNotice] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
 
   useEffect(() => {
@@ -49,7 +48,7 @@ function PanoramaApp() {
       .then((result) => {
         setLoaded(result)
         const validCodes = new Set(result.data.countries.map(({ code }) => code))
-        setSelectedCodes((current) => current.filter((code) => validCodes.has(code)).slice(0, 5))
+        setSelectedCodes((current) => current.filter((code) => validCodes.has(code)))
       })
       .catch((reason: unknown) => {
         setError(reason instanceof Error ? reason.message : 'Falha desconhecida ao carregar os dados.')
@@ -98,7 +97,6 @@ function PanoramaApp() {
   )
 
   const changeSelection = (code: string, additive: boolean) => {
-    setShowNotice(false)
     if (!additive) {
       setSelectedCodes([code])
       return
@@ -106,18 +104,13 @@ function PanoramaApp() {
 
     setSelectedCodes((current) => {
       if (current.includes(code)) return current.filter((item) => item !== code)
-      if (current.length >= 5) {
-        setShowNotice(true)
-        return current
-      }
       return [...current, code]
     })
   }
 
   const toggleCountry = (code: string) => changeSelection(code, true)
   const applyCountryPreset = (codes: string[]) => {
-    setShowNotice(false)
-    setSelectedCodes(codes.slice(0, 5))
+    setSelectedCodes(codes)
   }
   const applyPeriodPreset = (from: number, to: number) => {
     setStartYear(from)
@@ -265,8 +258,6 @@ function PanoramaApp() {
           onPeriod={applyPeriodPreset}
         />
         <CountrySelector countries={localizedCountries} selectedCodes={selectedCodes} onToggle={toggleCountry} onRemove={toggleCountry} language={language} />
-        {showNotice && <p className="notice" role="status">{translate(language, 'notice.maxCountries')}</p>}
-
         <div className="visual-grid">
           <WorldMap map={map} availableCodes={availableCodes} selectedCodes={selectedCodes} onSelect={changeSelection} mode={mode} series={data.series} year={endYear} language={language} />
           <TimeSeriesChart countries={selectedCountries} mode={mode} series={data.series} startYear={startYear} endYear={endYear} theme={theme} language={language} />

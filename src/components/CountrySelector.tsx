@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { isAggregateCode } from '../lib/entities'
 import { translate } from '../lib/i18n'
 import type { Country, Language } from '../types'
-import { countryColors } from '../types'
+import { countryColor } from '../types'
 
 type CountrySelectorProps = {
   countries: Country[]
@@ -46,7 +46,7 @@ export function CountrySelector({
     <div className="country-picker">
       <div className="selected-countries" aria-label={translate(language, 'countries.selected')}>
         {selected.map((country) => {
-          const color = countryColors[selectedCodes.indexOf(country.code)]
+          const color = countryColor(selectedCodes.indexOf(country.code))
           return (
             <button
               className="country-chip"
@@ -82,14 +82,12 @@ export function CountrySelector({
               <p className="country-result-heading">{translate(language, group.key)}</p>
               {group.items.map((country) => {
                 const isSelected = selectedCodes.includes(country.code)
-                const isDisabled = !isSelected && selectedCodes.length >= 5
                 return (
                   <button
                     key={country.code}
                     type="button"
                     role="option"
                     aria-selected={isSelected}
-                    disabled={isDisabled}
                     onClick={() => {
                       onToggle(country.code)
                       setQuery('')

@@ -12,9 +12,9 @@ describe('estado compartilhável na URL', () => {
     })
   })
 
-  it('ignora valores inválidos e limita a seleção a cinco entidades', () => {
+  it('ignora valores inválidos e preserva seleções com mais de cinco entidades', () => {
     const state = parseComparisonUrl('?countries=BRA,USA,CHN,JPN,PER,CAN&indicator=x&from=abc&to=4000')
-    expect(state).toEqual({ countries: ['BRA', 'USA', 'CHN', 'JPN', 'PER'] })
+    expect(state).toEqual({ countries: ['BRA', 'USA', 'CHN', 'JPN', 'PER', 'CAN'] })
   })
 
   it('serializa uma comparação reproduzível', () => {

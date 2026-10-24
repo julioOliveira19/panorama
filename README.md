@@ -6,7 +6,7 @@ A nota abaixo do gráfico resume as fontes e os intervalos presentes na seleçã
 
 O idioma pode ser alterado no canto superior direito. A preferência fica salva no navegador e também localiza nomes de países, números, datas, gráficos, tabelas e o CSV exportado.
 
-A seleção atual é reproduzida na URL com os parâmetros `countries`, `indicator`, `from`, `to` e `lang`. O botão **Copiar link** permite compartilhar diretamente países ou agregados, indicador, período e idioma. Atalhos oferecem comparações e períodos frequentes sem remover a possibilidade de seleção manual.
+A seleção atual é reproduzida na URL com os parâmetros `countries`, `indicator`, `from`, `to` e `lang`. O botão **Copiar link** permite compartilhar diretamente países ou agregados, indicador, período e idioma. Não há limite rígido de entidades selecionadas, e dois seletores compactos oferecem comparações e períodos frequentes sem remover a possibilidade de seleção manual.
 
 A busca separa países e territórios de regiões e grupos econômicos. No modo **PIB + dívida**, o seletor do mapa define qual dos dois indicadores controla a escala de cores.
 

@@ -16,11 +16,11 @@ Indicadores:
 Recursos:
 
 - Mapa-múndi interativo com zoom, arraste e escala temática no ano final selecionado.
-- Seleção de até cinco países, territórios ou agregados econômicos.
+- Seleção de múltiplos países, territórios ou agregados econômicos, sem limite rígido.
 - Clique simples seleciona ou desmarca o país; Ctrl+clique adiciona ou remove.
 - Busca separada entre países/territórios e regiões/grupos econômicos.
 - URL compartilhável com seleção, indicador, período e idioma.
-- Presets de comparações e períodos frequentes.
+- Presets de comparações e períodos frequentes em seletores dropdown compactos.
 - Período configurável sem apagar a seleção.
 - Gráfico anual, tabela, resumos e exportação CSV.
 - Visualização separada ou simultânea dos dois indicadores, com eixos adequados às unidades.

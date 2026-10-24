@@ -2,7 +2,7 @@ import { yearsInRange } from '../lib/calculations'
 import { formatPerCapita, formatValue, statusLabel } from '../lib/format'
 import { translate } from '../lib/i18n'
 import type { ComparisonMode, Country, IndicatorKey, Language, PanoramaData } from '../types'
-import { countryColors, debtColors } from '../types'
+import { countryColor, debtColor } from '../types'
 
 type DataTableProps = {
   countries: Country[]
@@ -42,7 +42,7 @@ export function DataTable({ countries, mode, series, startYear, endYear, languag
                 <th key={`${country.code}-${indicator}`}>
                   <span
                     className="table-country-dot"
-                    style={{ background: mode === 'both' && indicator === 'debt' ? debtColors[index] : countryColors[index] }}
+                    style={{ background: mode === 'both' && indicator === 'debt' ? debtColor(index) : countryColor(index) }}
                   />
                   {country.name}{mode === 'both' ? ` · ${translate(language, indicator === 'growth' ? 'table.gdpShort' : 'table.debtShort')}` : ''}
                 </th>

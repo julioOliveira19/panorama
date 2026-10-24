@@ -20,7 +20,7 @@
 
 ## Experiência
 
-- Mapa claro, seleção evidente e até cinco países.
+- Mapa claro e seleção evidente, sem limite rígido de países ou grupos.
 - Clique simples substitui a seleção; Ctrl+clique adiciona ou remove.
 - A busca de países é a alternativa acessível e móvel.
 - Trocar indicador ou período preserva os países.

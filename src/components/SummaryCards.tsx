@@ -2,7 +2,7 @@ import { debtSummary, growthSummary, levelSummary } from '../lib/calculations'
 import { formatPerCapita, formatSigned, formatSignedPerCapita, formatValue } from '../lib/format'
 import { translate } from '../lib/i18n'
 import type { ComparisonMode, Country, Language, PanoramaData } from '../types'
-import { countryColors } from '../types'
+import { countryColor } from '../types'
 
 type SummaryCardsProps = {
   countries: Country[]
@@ -37,7 +37,7 @@ export function SummaryCards({
 
           if (mode === 'both') {
             return (
-              <article className="summary-card summary-card-both" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
+              <article className="summary-card summary-card-both" key={country.code} style={{ '--country-color': countryColor(index) } as React.CSSProperties}>
                 <h3>{country.name}</h3>
                 <div className="summary-dual">
                   <div>
@@ -60,7 +60,7 @@ export function SummaryCards({
 
           if (mode === 'growth') {
             return (
-              <article className="summary-card" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
+              <article className="summary-card" key={country.code} style={{ '--country-color': countryColor(index) } as React.CSSProperties}>
                 <h3>{country.name}</h3>
                 <div className="summary-primary">
                   <strong>{formatValue(growth.average, language)}%</strong>
@@ -77,7 +77,7 @@ export function SummaryCards({
 
           if (mode === 'debt') {
             return (
-              <article className="summary-card" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
+              <article className="summary-card" key={country.code} style={{ '--country-color': countryColor(index) } as React.CSSProperties}>
                 <h3>{country.name}</h3>
                 <div className="summary-primary">
                   <strong>{formatSigned(debt.change, language)} p.p.</strong>
@@ -94,7 +94,7 @@ export function SummaryCards({
 
           const level = levelSummary(series[mode][country.code] ?? [], startYear, endYear)
           return (
-            <article className="summary-card" key={country.code} style={{ '--country-color': countryColors[index] } as React.CSSProperties}>
+            <article className="summary-card" key={country.code} style={{ '--country-color': countryColor(index) } as React.CSSProperties}>
               <h3>{country.name}</h3>
               <div className="summary-primary">
                 <strong>{formatPerCapita(level.final, language)}</strong>

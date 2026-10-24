@@ -32,7 +32,7 @@ export function parseComparisonUrl(search: string): Partial<ComparisonUrlState> 
         .split(',')
         .map((code) => code.trim().toUpperCase())
         .filter((code) => /^[A-Z0-9]{2,10}$/.test(code)),
-    )].slice(0, 5)
+    )]
   }
   if (rawMode && modes.includes(rawMode)) state.mode = rawMode
   if (rawLanguage && languages.includes(rawLanguage)) state.language = rawLanguage

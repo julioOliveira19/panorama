@@ -32,39 +32,45 @@ export function ComparisonPresets({
   onPeriod,
 }: ComparisonPresetsProps) {
   const selectedKey = [...selectedCodes].sort().join(',')
+  const activeCountryPreset = countryPresets.find(
+    (preset) => [...preset.codes].sort().join(',') === selectedKey,
+  )?.key ?? ''
+  const activePeriodPreset = periodPresets.find(
+    (preset) => startYear === preset.startYear && endYear === preset.endYear,
+  )?.key ?? ''
 
   return (
     <section className="preset-bar" aria-label={translate(language, 'presets.label')}>
-      <div className="preset-group">
+      <label className="preset-select">
         <span>{translate(language, 'presets.countries')}</span>
-        <div className="preset-buttons">
+        <select
+          value={activeCountryPreset}
+          onChange={(event) => {
+            const preset = countryPresets.find(({ key }) => key === event.target.value)
+            if (preset) onCountries(preset.codes)
+          }}
+        >
+          <option value="">{translate(language, 'presets.chooseComparison')}</option>
           {countryPresets.map((preset) => (
-            <button
-              key={preset.key}
-              type="button"
-              aria-pressed={[...preset.codes].sort().join(',') === selectedKey}
-              onClick={() => onCountries(preset.codes)}
-            >
-              {translate(language, preset.key)}
-            </button>
+            <option key={preset.key} value={preset.key}>{translate(language, preset.key)}</option>
           ))}
-        </div>
-      </div>
-      <div className="preset-group">
+        </select>
+      </label>
+      <label className="preset-select">
         <span>{translate(language, 'presets.periods')}</span>
-        <div className="preset-buttons">
+        <select
+          value={activePeriodPreset}
+          onChange={(event) => {
+            const preset = periodPresets.find(({ key }) => key === event.target.value)
+            if (preset) onPeriod(preset.startYear, preset.endYear)
+          }}
+        >
+          <option value="">{translate(language, 'presets.choosePeriod')}</option>
           {periodPresets.map((preset) => (
-            <button
-              key={preset.key}
-              type="button"
-              aria-pressed={startYear === preset.startYear && endYear === preset.endYear}
-              onClick={() => onPeriod(preset.startYear, preset.endYear)}
-            >
-              {translate(language, preset.key)}
-            </button>
+            <option key={preset.key} value={preset.key}>{translate(language, preset.key)}</option>
           ))}
-        </div>
-      </div>
+        </select>
+      </label>
     </section>
   )
 }

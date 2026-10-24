@@ -8,7 +8,7 @@ import { formatPerCapita, formatValue, statusLabel } from '../lib/format'
 import { yearsInRange } from '../lib/calculations'
 import { translate } from '../lib/i18n'
 import type { ComparisonMode, Country, IndicatorKey, Language, PanoramaData, Theme } from '../types'
-import { countryColors, debtColors } from '../types'
+import { countryColor, countryColors, debtColor } from '../types'
 
 registerECharts([LineChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer])
 
@@ -85,8 +85,8 @@ export function TimeSeriesChart({
           (series[indicator][country.code] ?? []).map((point) => [point.year, point]),
         )
         const color = mode === 'both' && indicator === 'debt'
-          ? debtColors[countryIndex]
-          : countryColors[countryIndex]
+          ? debtColor(countryIndex)
+          : countryColor(countryIndex)
         const unit = indicator === 'growth'
           ? '%'
           : indicator === 'debt'
